@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futsal Management System</title>
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+/* Navigation Bar */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.list-content {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.list-content li {
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.list-content li:hover {
+    color: #764ba2;
+}
+
+/* Main Content */
+.main-content {
+    max-width: 1200px;
+    margin: 50px auto;
+    padding: 0 20px;
+}
+
+.hero-section {
+    text-align: center;
+    color: white;
+    margin-bottom: 60px;
+    background-image: url('path/to/your/background-image.jpg'); /* Add a background image */
+    background-size: cover;
+    background-position: center;
+    padding: 100px 20px; /* Add padding for better spacing */
+    border-radius: 10px; /* Rounded corners */
+}
+
+.hero-section h1 {
+    font-size: 3em;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-section p {
+    font-size: 1.2em;
+    opacity: 0.9;
+    margin-bottom: 30px; /* Add margin for spacing */
+}
+
+.cta-button {
+    background-color: #667eea;
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+    background-color: #764ba2;
+}
+    </style>
+</head>
+<body>
+    <!-- Navigation barr -->
+     <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">JustFutsalThings ⚽</div>
+            <ul class="list-content">
+                <li>About</li>
+                <li>Login</li>
+                <li>Profile</li>
+            </ul>
+        </div>
+     </nav>
+
+     <!-- main content -->
+      <main class="main-content">
+          <section class="hero-section">
+            <h1>Welcome to JustFutsalThings ⚽</h1>
+            <p>Your ultimate futsal experience will be incerese through this platform, you can book the futsal ground near by you with exclusive offer</p>
+            <button class="cta-button">Book Now</button> 
+          </section>
+      </main>
+</body>
+</html>
