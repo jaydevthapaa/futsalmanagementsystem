@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - JustFutsalThings</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body class="backgroundimage" style="background-image: url('https://goalnepal.com/uploads/news/1626144627.jpg');">
+    
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">JustFutsalThings ⚽</div>
+            <ul class="list-content">
+                <li><a href="{% url 'home' %}" style="color: inherit; text-decoration: none;">Home</a></li>
+                {% if user.is_authenticated %}
+                    <li><span style="color: #8cd13c;">Welcome, {{ user.username }}!</span></li>
+                    <li><a href="{% url 'logout' %}" style="color: inherit; text-decoration: none;">Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'signin' %}" style="color: inherit; text-decoration: none;">Login</a></li>
+                    <li><a href="{% url 'signup' %}" style="color: inherit; text-decoration: none;">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    
+    <main class="main-content">
+        <!-- About Hero Section -->
+        <section class="about-hero">
+            <div class="about-overlay">
+                <h1>About JustFutsalThings ⚽</h1>
+                <p>Your Ultimate Futsal Experience Platform will Lorem ipsum dolor sit amet consectetur adipisicing elit. Non doloribus consequuntur impedit eos ut eligendi, cum voluptatibus, similique, laudantium hic natus? Excepturi error tempore sunt maiores voluptatem ullam tenetur dignissimos.</p>
+            </div>
+        </section>
+
+        <!-- About Content -->
+        <section class="about-content">
+            <div class="content-container">
+                <div class="about-section">
+                    <h2>Our Mission</h2>
+                    <p>At JustFutsalThings, we believe that futsal is more than just a sport - it's a passion that brings people together. Our mission is to make futsal ground booking simple, accessible, and enjoyable for everyone. We connect futsal enthusiasts with the best grounds in their area, ensuring every game is memorable.</p>
+                </div>
+
+                <div class="about-section">
+                    <h2>What We Offer</h2>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <h3> Ground Discovery</h3>
+                            <p>Find the perfect futsal ground near you with detailed information about facilities, pricing, and availability.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>Easy Booking</h3>
+                            <p>Book your preferred time slot with just a few clicks. No more phone calls or waiting in queues.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3> Best Prices</h3>
+                            <p>Get exclusive offers and competitive pricing on futsal ground bookings through our platform.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>Quality Assurance</h3>
+                            <p>All our partner grounds are verified for quality, safety, and excellent playing conditions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="about-section">
+                    <h2>Why Choose Us?</h2>
+                    <ul class="benefits-list">
+                        <li>🎯 <strong>User-Friendly Interface:</strong> Simple and intuitive booking process</li>
+                        <li>⚡ <strong>Instant Confirmation:</strong> Get immediate booking confirmations</li>
+                        <li>🔄 <strong>Flexible Cancellation:</strong> Easy rescheduling and cancellation options</li>
+                        <li>📱 <strong>Mobile Optimized:</strong> Book on the go with our mobile-friendly platform</li>
+                        <li>🛡️ <strong>Secure Payments:</strong> Safe and secure payment processing</li>
+                        <li>📞 <strong>24/7 Support:</strong> Round-the-clock customer support</li>
+                    </ul>
+                </div>
+
+                <div class="about-section">
+                    <h2>Our Story</h2>
+                    <p>JustFutsalThings was born from a simple idea: making futsal accessible to everyone. As passionate futsal players ourselves, we experienced the frustration of finding and booking quality grounds. We decided to create a solution that would connect futsal lovers with the best facilities in their area.</p>
+                    <p>Today, we're proud to serve individual and organizations lovers of the game, helping them find their perfect playing space and create unforgettable memories on the court locally.</p>
+                </div>
+
+                <div class="about-section">
+                    <h2>Join Our Community</h2>
+                    <p>Whether you're a seasoned player or just starting your futsal journey, JustFutsalThings is here to support you. Join our growing community of futsal enthusiasts and experience the game like never before.</p>
+                    <div class="cta-buttons">
+                        <a href="{% url 'signup' %}" class="cta-button">Get Started</a>
+                        <a href="{% url 'home' %}" class="cta-button secondary">Explore Grounds</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 JustFutsalThings. All rights reserved.</p>
+            <p>Made with ⚽ for futsal lovers</p>
+        </div>
+    </footer>
+</body>
+</html>

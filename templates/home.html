@@ -8,19 +8,33 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
-    <!-- Navigation barr -->
+    
      <nav class="navbar">
         <div class="nav-container">
             <div class="logo">JustFutsalThings ⚽</div>
             <ul class="list-content">
-                <li>About</li>
-                <li>Login</li>
-                <li>Profile</li>
+                <li><a href="{% url 'about' %}" style="color: inherit; text-decoration: none;">About</a></li>
+                {% if user.is_authenticated %}
+                    <li><span style="color: #8cd13c;">Welcome, {{ user.username }}!</span></li>
+                    <li><a href="{% url 'logout' %}" style="color: inherit; text-decoration: none;">Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'signin' %}" style="color: inherit; text-decoration: none;">Login</a></li>
+                    <li><a href="{% url 'signup' %}" style="color: inherit; text-decoration: none;">Sign Up</a></li>
+                {% endif %}
             </ul>
         </div>
      </nav>
 
-     <!-- main content -->
+     <!-- Display Messages -->
+     {% if messages %}
+         {% for message in messages %}
+             <div class="alert alert-{{ message.tags }}" style="background: {% if message.tags == 'error' %}#f8d7da{% else %}#d4edda{% endif %}; color: {% if message.tags == 'error' %}#721c24{% else %}#155724{% endif %}; padding: 10px; margin: 10px 20px; border-radius: 5px; border: 1px solid {% if message.tags == 'error' %}#f5c6cb{% else %}#c3e6cb{% endif %}; text-align: center;">
+                 {{ message }}
+             </div>
+         {% endfor %}
+     {% endif %}
+
+     
       <main class="main-content">
           <section class="hero-section" style="background-image: url('https://goalnepal.com/uploads/news/1626144627.jpg');">
             <div class="hero-overlay">
