@@ -3,8 +3,8 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 class FutsalGround(models.Model):
-    groundName=models.CharField(max_length=20)
-    location=models.CharField(max_length=20)
+    groundName=models.CharField(max_length=100)
+    location=models.CharField(max_length=100)
     description=models.TextField()
     price_per_hour = models.DecimalField(max_digits=4, decimal_places=0)
     image=models.ImageField(upload_to='grounds', null=True , blank= True)

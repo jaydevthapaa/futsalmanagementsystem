@@ -4,11 +4,27 @@ from django.contrib.auth import authenticate,login, logout
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .forms import SignupForm
+from .forms import SignupForm, FutsalGroundForm, UserEditForm
 from django.contrib.auth.decorators import login_required
+from .models import UserProfile, FutsalGround
 # Create your views here.
 def home_page_view(request):
-    return render(request,"home.html")
+    nearby_grounds = []
+    if request.user.is_authenticated:
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            user_address = (profile.address or '').strip()
+            if user_address:
+                nearby_grounds = list(
+                    FutsalGround.objects.filter(location__iexact=user_address)[:5]
+                )
+                if not nearby_grounds:
+                    nearby_grounds = list(
+                        FutsalGround.objects.filter(location__icontains=user_address)[:5]
+                    )
+        except UserProfile.DoesNotExist:
+            pass
+    return render(request, "home.html", {"nearby_grounds": nearby_grounds})
 
 
 # signin view
@@ -32,6 +48,8 @@ def signin_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Welcome back to FutsalThings, {user.username}!')
+                if user.is_staff:
+                    return redirect('admin_dashboard')
                 return redirect('home')
             else:
                 messages.error(request, "Invalid username or password. Please try again.")
@@ -46,6 +64,12 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             username = form.cleaned_data.get('username')
+            address = form.cleaned_data.get('address', '').strip()
+            if address:
+                UserProfile.objects.update_or_create(
+                    user=user,
+                    defaults={"address": address}
+                )
             messages.success(request, f'Account created successfully for {username}! You can log in now')
             return redirect('signin')
         else:
@@ -63,3 +87,126 @@ def logout_view(request):
 
 def about_view(request):
     return render(request, 'about.html')
+
+
+@login_required
+def admin_dashboard_view(request):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access the dashboard.")
+        return redirect('home')
+
+    total_users = User.objects.count()
+    total_grounds = FutsalGround.objects.count()
+    recent_grounds = FutsalGround.objects.order_by('-created_at')[:5]
+
+    context = {
+        'total_users': total_users,
+        'total_grounds': total_grounds,
+        'recent_grounds': recent_grounds,
+    }
+    return render(request, 'admin/dashboard.html', context)
+
+
+@login_required
+def grounds_list_view(request):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    grounds = FutsalGround.objects.all().order_by('-created_at')
+    return render(request, 'admin/grounds_list.html', { 'grounds': grounds })
+
+
+@login_required
+def grounds_create_view(request):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    if request.method == 'POST':
+        form = FutsalGroundForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Ground created successfully.')
+            return redirect('grounds_list')
+    else:
+        form = FutsalGroundForm()
+    return render(request, 'admin/grounds_form.html', { 'form': form, 'is_edit': False })
+
+
+@login_required
+def grounds_edit_view(request, pk):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    ground = FutsalGround.objects.get(pk=pk)
+    if request.method == 'POST':
+        form = FutsalGroundForm(request.POST, request.FILES, instance=ground)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Ground updated successfully.')
+            return redirect('grounds_list')
+    else:
+        form = FutsalGroundForm(instance=ground)
+    return render(request, 'admin/grounds_form.html', { 'form': form, 'is_edit': True })
+
+
+@login_required
+def grounds_delete_view(request, pk):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    ground = FutsalGround.objects.get(pk=pk)
+    if request.method == 'POST':
+        ground.delete()
+        messages.success(request, 'Ground deleted successfully.')
+        return redirect('grounds_list')
+    return render(request, 'admin/grounds_confirm_delete.html', { 'ground': ground })
+
+
+@login_required
+def users_list_view(request):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    users = User.objects.all().order_by('username')
+    return render(request, 'admin/users_list.html', { 'users': users })
+
+
+@login_required
+def admin_profile_view(request):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    return render(request, 'admin/profile.html', { 'admin_user': request.user })
+
+
+@login_required
+def user_edit_view(request, pk):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    user_obj = User.objects.get(pk=pk)
+    if request.method == 'POST':
+        form = UserEditForm(request.POST, instance=user_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'User updated successfully.')
+            return redirect('users_list')
+    else:
+        form = UserEditForm(instance=user_obj)
+    return render(request, 'admin/user_form.html', { 'form': form, 'user_obj': user_obj })
+
+
+@login_required
+def user_delete_view(request, pk):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    user_obj = User.objects.get(pk=pk)
+    if request.method == 'POST':
+        if user_obj == request.user:
+            messages.error(request, 'You cannot delete your own account while logged in.')
+            return redirect('users_list')
+        user_obj.delete()
+        messages.success(request, 'User deleted successfully.')
+        return redirect('users_list')
+    return render(request, 'admin/user_confirm_delete.html', { 'user_obj': user_obj })
