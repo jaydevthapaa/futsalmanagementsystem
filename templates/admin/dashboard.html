@@ -12,11 +12,11 @@
     <div class="dash-container">
         <!-- Navigation Tabs -->
         <div class="nav-tabs">
-            <div class="nav-tab active" onclick="showSection('dashboard')">Dashboard</div>
-            <div class="nav-tab" onclick="showSection('grounds')">Manage Grounds</div>
-            <div class="nav-tab" onclick="showSection('users')">View Users</div>
-            <div class="nav-tab" onclick="showSection('profile')">Profile</div>
-            <div class="nav-tab" onclick="location.href='{% url 'logout' %}'">Logout</div>
+            <div class="nav-tab active" data-section="dashboard">Dashboard</div>
+            <div class="nav-tab" data-section="grounds">Manage Grounds</div>
+            <div class="nav-tab" data-section="users">View Users</div>
+            <div class="nav-tab" data-section="profile">Profile</div>
+            <a class="nav-tab" href="{% url 'logout' %}">Logout</a>
         </div>
 
         <!-- Dashboard Section -->
@@ -50,7 +50,7 @@
         <!-- Grounds Management Section -->
         <div id="grounds" class="admin-section">
             <h2>Futsal Grounds</h2>
-            <p><a class="auth-link" href="#" onclick="showSection('grounds-form')">Add Ground</a></p>
+            <p><a class="auth-link" href="#" data-section="grounds-form">Add Ground</a></p>
             
             <!-- Grounds List -->
             <div id="grounds-list">
@@ -72,8 +72,8 @@
                             <td>{{ g.price_per_hour }}</td>
                             <td>{{ g.is_available|yesno:"Yes,No" }}</td>
                             <td class="actions-cell">
-                                <a class="auth-link" href="#" onclick="editGround({{ g.pk }})">Edit</a>
-                                <a class="auth-link btn-danger ml-10" href="#" onclick="deleteGround({{ g.pk }}, '{{ g.groundName }}')">Delete</a>
+                                <a class="auth-link js-edit-ground" href="#" data-ground-id="{{ g.pk }}">Edit</a>
+                                <a class="auth-link btn-danger ml-10 js-delete-ground" href="#" data-ground-id="{{ g.pk }}" data-ground-name="{{ g.groundName }}">Delete</a>
                             </td>
                         </tr>
                         {% empty %}
@@ -119,7 +119,7 @@
                         {% if form.is_available.errors %}<div class="field-error">{{ form.is_available.errors.0 }}</div>{% endif %}
                     </div>
                     <button type="submit" class="auth-button">Save</button>
-                    <a href="#" class="auth-link ml-10" onclick="showSection('grounds')">Cancel</a>
+                    <a href="#" class="auth-link ml-10" data-section="grounds">Cancel</a>
                 </form>
             </div>
 
@@ -130,7 +130,7 @@
                 <form method="post" id="delete-ground-form">
                     {% csrf_token %}
                     <button type="submit" class="auth-button btn-danger">Confirm Delete</button>
-                    <a href="#" class="auth-link ml-10" onclick="showSection('grounds')">Cancel</a>
+                    <a href="#" class="auth-link ml-10" data-section="grounds">Cancel</a>
                 </form>
             </div>
         </div>
@@ -158,9 +158,9 @@
                         <td>{{ u.is_superuser|yesno:"Yes,No" }}</td>
                         <td>{{ u.date_joined|date:"Y-m-d" }}</td>
                         <td>
-                            <a class="auth-link" href="#" onclick="editUser({{ u.pk }})">Edit</a>
+                            <a class="auth-link js-edit-user" href="#" data-user-id="{{ u.pk }}">Edit</a>
                             {% if request.user.pk != u.pk %}
-                            <a class="auth-link btn-danger ml-10" href="#" onclick="deleteUser({{ u.pk }}, '{{ u.username }}')">Delete</a>
+                            <a class="auth-link btn-danger ml-10 js-delete-user" href="#" data-user-id="{{ u.pk }}" data-username="{{ u.username }}">Delete</a>
                             {% endif %}
                         </td>
                     </tr>
@@ -196,7 +196,7 @@
                         {% if form.is_superuser.errors %}<div class="field-error">{{ form.is_superuser.errors.0 }}</div>{% endif %}
                     </div>
                     <button type="submit" class="auth-button">Save</button>
-                    <a href="#" class="auth-link ml-10" onclick="showSection('users')">Cancel</a>
+                    <a href="#" class="auth-link ml-10" data-section="users">Cancel</a>
                 </form>
             </div>
 
@@ -207,7 +207,7 @@
                 <form method="post" id="delete-user-form">
                     {% csrf_token %}
                     <button type="submit" class="auth-button btn-danger">Confirm Delete</button>
-                    <a href="#" class="auth-link ml-10" onclick="showSection('users')">Cancel</a>
+                    <a href="#" class="auth-link ml-10" data-section="users">Cancel</a>
                 </form>
             </div>
         </div>
@@ -241,35 +241,63 @@
             }
             
             // Activate corresponding nav tab
-            const targetTab = document.querySelector(`[onclick="showSection('${sectionId}')"]`);
+            const targetTab = document.querySelector(`.nav-tab[data-section="${sectionId}"]`);
             if (targetTab) {
                 targetTab.classList.add('active');
             }
         }
 
-        function editGround(groundId) {
-            // This would typically load the ground data and show the form
-            // For now, just show the form section
-            showSection('grounds-form');
-        }
+        // Delegated events
+        document.addEventListener('click', function(e) {
+            const tab = e.target.closest('.nav-tab[data-section]');
+            if (tab) {
+                e.preventDefault();
+                showSection(tab.getAttribute('data-section'));
+                return;
+            }
 
-        function deleteGround(groundId, groundName) {
-            document.getElementById('ground-name').textContent = groundName;
-            document.getElementById('delete-ground-form').action = `/admin/grounds/${groundId}/delete/`;
-            showSection('grounds-delete');
-        }
+            const linkSection = e.target.closest('a[data-section]');
+            if (linkSection) {
+                e.preventDefault();
+                showSection(linkSection.getAttribute('data-section'));
+                return;
+            }
 
-        function editUser(userId) {
-            // This would typically load the user data and show the form
-            // For now, just show the form section
-            showSection('user-form');
-        }
+            const editGroundBtn = e.target.closest('.js-edit-ground');
+            if (editGroundBtn) {
+                e.preventDefault();
+                showSection('grounds-form');
+                return;
+            }
 
-        function deleteUser(userId, username) {
-            document.getElementById('user-name').textContent = username;
-            document.getElementById('delete-user-form').action = `/admin/users/${userId}/delete/`;
-            showSection('user-delete');
-        }
+            const deleteGroundBtn = e.target.closest('.js-delete-ground');
+            if (deleteGroundBtn) {
+                e.preventDefault();
+                const groundId = deleteGroundBtn.getAttribute('data-ground-id');
+                const groundName = deleteGroundBtn.getAttribute('data-ground-name');
+                document.getElementById('ground-name').textContent = groundName;
+                document.getElementById('delete-ground-form').action = `/dashboard/grounds/${groundId}/delete/`;
+                showSection('grounds-delete');
+                return;
+            }
+
+            const editUserBtn = e.target.closest('.js-edit-user');
+            if (editUserBtn) {
+                e.preventDefault();
+                showSection('user-form');
+                return;
+            }
+
+            const deleteUserBtn = e.target.closest('.js-delete-user');
+            if (deleteUserBtn) {
+                e.preventDefault();
+                const userId = deleteUserBtn.getAttribute('data-user-id');
+                const username = deleteUserBtn.getAttribute('data-username');
+                document.getElementById('user-name').textContent = username;
+                document.getElementById('delete-user-form').action = `/dashboard/users/${userId}/delete/`;
+                showSection('user-delete');
+            }
+        });
     </script>
 </body>
 </html>

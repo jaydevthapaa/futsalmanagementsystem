@@ -1,7 +1,6 @@
 from django.shortcuts import redirect
 from django.urls import reverse
 
-
 class AdminOnlyMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -15,16 +14,18 @@ class AdminOnlyMiddleware:
         if request.user.is_superuser:
             dashboard_url = reverse('admin_dashboard')
             allowed_prefixes = [
-                dashboard_url,
+                dashboard_url,  # /dashboard/
                 reverse('logout'),
-                '/static/',
-                '/media/',
+                '/dashboard/',  # Allow all dashboard sub-paths
+                '/admin/',  # Django admin
+                '/static/',  # Static files
+                '/media/',   # Media files
             ]
-
-            path = request.path
-            if not any(path.startswith(prefix) for prefix in allowed_prefixes):
+            
+            # Check if current path is allowed
+            current_path = request.path
+            if not any(current_path.startswith(prefix) for prefix in allowed_prefixes):
                 return redirect('admin_dashboard')
 
-        return self.get_response(request)
-
-
+        response = self.get_response(request)
+        return response

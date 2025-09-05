@@ -49,7 +49,7 @@ def signin_view(request):
                 login(request, user)
                 messages.success(request, f'Welcome back to FutsalThings, {user.username}!')
                 if user.is_staff:
-                    return redirect('admin_dashboard')
+                    return redirect('admin_dashboard')  # This will go to /dashboard/
                 return redirect('home')
             else:
                 messages.error(request, "Invalid username or password. Please try again.")
@@ -90,46 +90,70 @@ def about_view(request):
 
 
 @login_required
-def admin_dashboard_view(request):
-    if not request.user.is_staff:
-        messages.error(request, "You do not have permission to access the dashboard.")
-        return redirect('home')
-
-    total_users = User.objects.count()
-    total_grounds = FutsalGround.objects.count()
-    recent_grounds = FutsalGround.objects.order_by('-created_at')[:5]
-
-    context = {
-        'total_users': total_users,
-        'total_grounds': total_grounds,
-        'recent_grounds': recent_grounds,
-    }
-    return render(request, 'admin/dashboard.html', context)
-
-
-@login_required
 def grounds_list_view(request):
+    
     if not request.user.is_staff:
         messages.error(request, "You do not have permission to access this page.")
         return redirect('home')
+    
     grounds = FutsalGround.objects.all().order_by('-created_at')
-    return render(request, 'admin/grounds_list.html', { 'grounds': grounds })
+    return render(request, 'admin/grounds_list.html', {'grounds': grounds})
+
 
 
 @login_required
 def grounds_create_view(request):
+    
     if not request.user.is_staff:
         messages.error(request, "You do not have permission to access this page.")
         return redirect('home')
+    
     if request.method == 'POST':
         form = FutsalGroundForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'Ground created successfully.')
             return redirect('grounds_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = FutsalGroundForm()
-    return render(request, 'admin/grounds_form.html', { 'form': form, 'is_edit': False })
+    
+    return render(request, 'admin/grounds_form.html', {'form': form, 'is_edit': False})
+
+@login_required
+def admin_dashboard_view(request):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access the dashboard.")
+        return redirect('home')
+    
+    # Dashboard data to show
+    total_users = User.objects.count()
+    total_grounds = FutsalGround.objects.count()
+    recent_grounds = FutsalGround.objects.order_by('-created_at')[:5]  
+    
+    # Handle ground creation form
+    if request.method == 'POST':
+        form = FutsalGroundForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Ground created successfully.')
+            return redirect('admin_dashboard')  # Stay on dashboard
+        else:
+            messages.error(request, 'Please correct the errors in the ground form.')
+    else:
+        form = FutsalGroundForm()
+    
+    context = {
+        'total_users': total_users,
+        'total_grounds': total_grounds,
+        'recent_grounds': recent_grounds,
+        'admin_user': request.user,
+        'form': form,
+        'is_edit': False,
+    }
+    return render(request, 'admin/dashboard.html', context)
+    
 
 
 @login_required

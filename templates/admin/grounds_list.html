@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Futsal Grounds</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>.nav{margin:16px 0}.nav a{margin-right:12px}</style>
+</head>
+<body>
+    <div class="nav">
+        <a class="auth-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
+        <a class="auth-link" href="{% url 'grounds_create' %}">Add Ground</a>
+        <a class="auth-link" href="{% url 'users_list' %}">Users</a>
+        <a class="auth-link" href="{% url 'admin_profile' %}">Profile</a>
+        <a class="auth-link" href="{% url 'logout' %}">Logout</a>
+    </div>
+
+    <h2>Futsal Grounds</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Price/hr</th>
+                <th>Available</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for g in grounds %}
+            <tr>
+                <td>{{ g.groundName }}</td>
+                <td>{{ g.location }}</td>
+                <td>{{ g.price_per_hour }}</td>
+                <td>{{ g.is_available|yesno:"Yes,No" }}</td>
+                <td>
+                    <a class="auth-link" href="{% url 'grounds_edit' g.pk %}">Edit</a>
+                    <a class="auth-link btn-danger ml-10" href="{% url 'grounds_delete' g.pk %}">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No grounds yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+

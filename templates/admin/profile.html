@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Admin Profile</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <div class="nav" style="margin:16px 0">
+        <a class="auth-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
+        <a class="auth-link" href="{% url 'grounds_list' %}">Grounds</a>
+        <a class="auth-link" href="{% url 'users_list' %}">Users</a>
+        <a class="auth-link" href="{% url 'logout' %}">Logout</a>
+    </div>
+    <h2>Admin Profile</h2>
+    <p><strong>Name:</strong> {{ admin_user.username }}</p>
+    <p><strong>Email:</strong> {{ admin_user.email }}</p>
+</body>
+</html>
+

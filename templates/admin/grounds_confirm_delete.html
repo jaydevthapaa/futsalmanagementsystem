@@ -1,0 +1,19 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Delete Ground</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <h2>Delete Ground</h2>
+    <p>Are you sure you want to delete <strong>{{ ground.groundName }}</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="auth-button btn-danger">Confirm Delete</button>
+        <a href="{% url 'grounds_list' %}" class="auth-link ml-10">Cancel</a>
+    </form>
+</body>
+</html>
+
