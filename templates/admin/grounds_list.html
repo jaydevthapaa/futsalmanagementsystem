@@ -17,6 +17,7 @@
     </div>
 
     <h2>Futsal Grounds</h2>
+    
     <table class="table">
         <thead>
             <tr>
@@ -32,7 +33,7 @@
             <tr>
                 <td>{{ g.groundName }}</td>
                 <td>{{ g.location }}</td>
-                <td>{{ g.price_per_hour }}</td>
+                <td>Rs. {{ g.price_per_hour }}</td>
                 <td>{{ g.is_available|yesno:"Yes,No" }}</td>
                 <td>
                     <a class="auth-link" href="{% url 'grounds_edit' g.pk %}">Edit</a>
@@ -40,10 +41,9 @@
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5">No grounds yet.</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding:20px;">No grounds yet.</td></tr>
             {% endfor %}
         </tbody>
     </table>
 </body>
 </html>
-

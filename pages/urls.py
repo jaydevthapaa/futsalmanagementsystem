@@ -23,7 +23,6 @@ urlpatterns = [
     path('about/', about_view, name='about'),
     path('logout/', logout_view, name='logout'),
     
-   
     path('dashboard/', admin_dashboard_view, name='admin_dashboard'),
     
     
