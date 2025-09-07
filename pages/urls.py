@@ -14,6 +14,12 @@ from .views import (
     admin_profile_view,
     user_edit_view,
     user_delete_view,
+
+    all_grounds_view,
+    user_grounds_view,
+    grounds_detail_view,
+
+
 )
 
 urlpatterns = [
@@ -34,4 +40,9 @@ urlpatterns = [
     path('dashboard/profile/', admin_profile_view, name='admin_profile'),
     path('dashboard/users/<int:pk>/edit/', user_edit_view, name='user_edit'),
     path('dashboard/users/<int:pk>/delete/', user_delete_view, name='user_delete'),
+
+    # users ground views
+    path('grounds/', all_grounds_view, name='all_grounds'),
+    path('user/grounds/', user_grounds_view, name='users_grounds'),
+    path('ground/<int:pk>/', grounds_detail_view, name='ground_detail' ),
 ]

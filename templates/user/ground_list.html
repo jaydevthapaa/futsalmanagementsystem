@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Futsal Grounds - FutsalThings ⚽</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Available Futsal Grounds</h1>
+            <div>
+                <a href="{% url 'home' %}" class="nav-link">← Back to Home</a>
+                {% if user.is_staff %}
+                    <a href="{% url 'admin_dashboard' %}" class="nav-link">Admin Dashboard</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <form method="GET" class="filter-form">
+                <input type="text" name="location" placeholder="Filter by location..." 
+                       value="{{ location_filter }}" class="filter-input">
+                <button type="submit" class="filter-btn">Filter</button>
+                <a href="{% url 'users_grounds' %}"class="filter-btn" style="background: #666; text-decoration: none;">Clear</a>
+            </form>
+        </div>
+
+        {% if grounds %}
+            <div class="grounds-grid">
+                {% for ground in grounds %}
+                    <div class="ground-card">
+                        {% if ground.image %}
+                            <img src="{{ ground.image.url }}" alt="{{ ground.name }}" class="ground-image">
+                        {% endif %}
+                        <div class="ground-name">{{ ground.name }}</div>
+                        <div class="ground-location">📍 {{ ground.location }}</div>
+                        <div class="ground-price">Rs. {{ ground.price }}/hour</div>
+                        {% if ground.description %}
+                            <p style="color: #666; font-size: 0.9rem;">
+                                {{ ground.description|truncatechars:100 }}
+                            </p>
+                        {% endif %}
+                        <a href="{% url 'ground_detail' ground.pk %}" class="view-details-btn">View Details</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-grounds">
+                <h3>No grounds available</h3>
+                <p>No futsal grounds match your criteria. Try adjusting your filters.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -234,3 +234,57 @@ def user_delete_view(request, pk):
         messages.success(request, 'User deleted successfully.')
         return redirect('users_list')
     return render(request, 'admin/user_confirm_delete.html', { 'user_obj': user_obj })
+
+@login_required
+
+def user_grounds_view(request):
+    # to see all avilable futsal grounds  
+    grounds= FutsalGround.objects.all().order_by('name')
+    # filter by location if user has address
+
+    location_filter= request.Get.get('location','').strip()
+    if location_filter:
+        grounds= grounds.filter(location_icontains=location_filter)
+
+    context={
+        'grounds':grounds,
+        'location_filter': location_filter
+    }
+    return render(request,'user/ground_list.html', context)
+
+@login_required
+def grounds_detail_view(request,pk):
+    #to see  detailed information about a specific grond
+    try:
+        ground= FutsalGround.objects.get(pk=pk)
+    except FutsalGround.DoesNotExist:
+        messages.error(request,"ground not found sorry")
+        return redirect('user_grounds')
+
+    context={
+        'grounds':ground,
+    }
+    return render(request,'user/ground_detail.html',context)
+
+def all_grounds_view(request):
+    grounds= FutsalGround.objects.all().order_by('name')
+    
+    #adding search functionallity 
+    search_query= request.GET.get('search','').strip()
+    location_filter= request.GET.get('location','').strip()
+
+    if search_query:
+        grounds= grounds.filter(name_icontains=search_query)
+
+    if location_filter:
+        grounds= grounds.filter(location_icontains=location_filter)
+
+    #unique location for filter dropdown#
+    all_locations= FutsalGround.objects.values_list('location',flat=True).distinct()
+
+    context={
+        'grounds':grounds,
+        'search_query':search_query,
+        'all_locations':all_locations,
+    }
+    return render(request,'ground_list.html', context)
