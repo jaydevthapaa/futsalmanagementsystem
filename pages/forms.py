@@ -38,6 +38,7 @@ class FutsalGroundForm(forms.ModelForm):
             "price_per_hour",
             "image",
             "is_available",
+            'contact_number',
         ]
 
 

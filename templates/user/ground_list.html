@@ -33,11 +33,11 @@
                 {% for ground in grounds %}
                     <div class="ground-card">
                         {% if ground.image %}
-                            <img src="{{ ground.image.url }}" alt="{{ ground.name }}" class="ground-image">
+                            <img src="{{ ground.image.url }}" alt="{{ ground.groundName }}" class="ground-image">
                         {% endif %}
-                        <div class="ground-name">{{ ground.name }}</div>
+                        <div class="ground-name">{{ ground.groundName }}</div>
                         <div class="ground-location">📍 {{ ground.location }}</div>
-                        <div class="ground-price">Rs. {{ ground.price }}/hour</div>
+                        <div class="ground-price">Rs. {{ ground.price_per_hour }}/hour</div>
                         {% if ground.description %}
                             <p style="color: #666; font-size: 0.9rem;">
                                 {{ ground.description|truncatechars:100 }}

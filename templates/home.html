@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futsal Management System</title>
+    <title>JustFutsalThings ⚽</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
+    <!-- Navigation barr-->
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">JustFutsalThings ⚽</div>
             <ul class="list-content">
                 <li><a href="{% url 'about' %}" class="link-clean">About</a></li>
-                
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'users_grounds' %}" class="link-clean">Browse Grounds</a></li>
                     {% if user.is_staff %}
@@ -30,7 +30,7 @@
         </div>
     </nav>
 
-    <!-- Display Messages -->
+    <!-- alert Messages-->
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %} alert-center">
@@ -39,54 +39,48 @@
         {% endfor %}
     {% endif %}
 
-    <main class="main-content">
-        <section class="hero-section home-hero-bg">
-            <div class="hero-overlay">
-                <h1>Welcome to JustFutsalThings ⚽</h1>
-                <p>Your ultimate futsal experience will be increased through this platform, you can book the futsal ground near by you with exclusive offer</p>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'users_grounds' %}" class="cta-button">Browse Grounds</a>
-                {% else %}
-                    <a href="{% url 'signup' %}" class="cta-button">Get Started</a>
-                {% endif %}
-            </div>
-        </section>
+    <!-- Hero Section -->
+    <section class="hero-section home-hero-bg">
+        <div class="hero-overlay">
+            <h1>Welcome to JustFutsalThings ⚽</h1>
+            <p>Book futsal grounds near you with exclusive offers!</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'users_grounds' %}" class="cta-button">Browse Grounds</a>
+            {% else %}
+                <a href="{% url 'signup' %}" class="cta-button">Get Started</a>
+            {% endif %}
+        </div>
+    </section>
 
-        <!-- Nearby Grounds Section for Authenticated Users -->
-        {% if user.is_authenticated and nearby_grounds %}
+    <!-- Nearby Grounds -->
+    {% if user.is_authenticated %}
         <section class="about-content content-container">
-            <div class="about-section">
-                <h2>Futsal Grounds Near You</h2>
-                <div class="nearby-grounds-list">
-                    {% for ground in nearby_grounds %}
-                    <div class="ground-item">
-                        <h3>{{ ground.name }}</h3>
-                        <p><strong>Location:</strong> {{ ground.location }}</p>
-                        <p><strong>Price:</strong> Rs. {{ ground.price }}/hour</p>
-                        {% if ground.description %}
-                            <p>{{ ground.description|truncatechars:100 }}</p>
-                        {% endif %}
-                        <a href="{% url 'ground_detail' ground.pk %}" class="btn-secondary">View Details</a>
-                    </div>
-                    {% endfor %}
-                </div>
-                <div class="text-center" style="margin-top: 20px;">
-                    <a href="{% url 'users_grounds' %}" class="cta-button">View All Grounds</a>
-                </div>
+    <h2>Futsal Grounds Near You</h2>
+    {% if nearby_grounds %}
+    <div class="nearby-grounds-list">
+        {% for ground in nearby_grounds %}
+        <div class="ground-item" style="background-image: url('{{ ground.image.url }}');">
+            <div class="ground-overlay">
+                <h3>{{ ground.name }}</h3>
+                <p><strong>Location:</strong> {{ ground.location }}</p>
+                <p><strong>Price:</strong> Rs. {{ ground.price_per_hour }}/hour</p>
+                {% if ground.description %}
+                    <p>{{ ground.description|truncatechars:100 }}</p>
+                {% endif %}
+                <a href="{% url 'ground_detail' ground.pk %}" class="btn-secondary">View Details</a>
             </div>
-        </section>
-        {% elif user.is_authenticated %}
-        <section class="about-content content-container">
-            <div class="about-section">
-                <h2>Discover Futsal Grounds</h2>
-                <p>No grounds found near your location, but don't worry! Browse all available grounds to find the perfect futsal venue for you.</p>
-                <div class="text-center">
-                    <a href="{% url 'users_grounds' %}" class="cta-button">Browse All Grounds</a>
-                </div>
-            </div>
-        </section>
-        {% endif %}
-    </main>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="text-center" style="margin-top: 20px;">
+        <a href="{% url 'users_grounds' %}" class="cta-button">View All Grounds</a>
+    </div>
+    {% else %}
+        <p class="text-center">No nearby grounds found. <a href="{% url 'users_grounds' %}">Browse all grounds</a>.</p>
+    {% endif %}
+</section>
+
+    {% endif %}
 
     <script src="{% static 'auto_hide_alerts.js' %}"></script>
 </body>

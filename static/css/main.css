@@ -876,15 +876,33 @@ input#id_location {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
-    margin: 20px 0;
 }
 
 .ground-item {
-    background: #f9f9f9;
-    padding: 20px;
+    position: relative;
     border-radius: 8px;
-    border-left: 4px solid #4CAF50;
+    min-height: 200px;
+    color: white;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
 }
+
+.ground-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px;
+    background: rgba(0,0,0,0.5);
+}
+
+.ground-overlay h3,
+.ground-overlay p {
+    margin: 5px 0;
+    color: white;
+}
+
 
 .ground-item h3 {
     margin: 0 0 10px 0;

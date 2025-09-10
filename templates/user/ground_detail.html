@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JustFutsal Things ⚽ </title>
-    {% load static%}
+    <title>JustFutsal Things ⚽</title>
+    {% load static %}
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
@@ -15,40 +15,49 @@
                 <a href="{% url 'home' %}" class="nav-link">Home</a>
             </div>
         </div>
+
         <div class="ground-detail">
             {% if ground.image %}
-             <img src="{{ground.image.url}}" alt="{{ground.name}}" class="ground-image">
+                <img src="{{ ground.image.url }}" alt="{{ ground.groundName }}" class="ground-image">
             {% endif %}
 
-            <h1 class="ground-title">{{ ground.name}}</h1>
+            <h1 class="ground-title">{{ ground.groundName }}</h1>
+
             <div class="ground-info">
                 <div class="info-item">
                     <div class="info-label">Location</div>
-                    <div class="info-value">📌{{ground.location}}</div>
+                    <div class="info-value">📌 {{ ground.location }}</div>
                 </div>
+
                 <div class="info-item">
                     <div class="info-label">Price per hour</div>
-                    <div class="info-value price-highlight">Rs.{{ground.price}}</div>
+                    <div class="info-value price-highlight">Rs. {{ ground.price_per_hour }}</div>
                 </div>
+
                 <div class="info-item">
                     <div class="info-label">Contact</div>
                     {% if ground.contact_number %}
-                    📞 {{ ground.contact_number }}
+                        📞 {{ ground.contact_number }}
+                    {% else %}
+                        Not provided
                     {% endif %}
                 </div>
             </div>
+
             <div class="info-item">
                 <div class="info-label">Added on</div>
-                <div class="info-value">{{ ground.created_at|date:"F d, Y"}}</div>
+                <div class="info-value">{{ ground.created_at|date:"F d, Y" }}</div>
             </div>
         </div>
-        {% if ground.description%}
-        <div>
-            <h3>Description</h3>
-            <div class="ground-description">{{ ground.description|linebreaks }}</div>
-        </div>
+
+        {% if ground.description %}
+            <div>
+                <h3>Description</h3>
+                <div class="ground-description">{{ ground.description|linebreaks }}</div>
+            </div>
         {% endif %}
-        <a href="{%url 'users_grounds' %" class="back-btn"}>Back to all grounds</a>
+
+        <a href="{% url 'users_grounds' %}" class="back-btn">Back to all grounds</a>
     </div>
 </body>
 </html>

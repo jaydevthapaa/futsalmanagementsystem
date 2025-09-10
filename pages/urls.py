@@ -3,9 +3,9 @@ from .views import (
     home_page_view,
     signin_view,
     signup_view,
-    about_view,
     logout_view,
-    admin_dashboard_view,  
+    about_view,
+    admin_dashboard_view,
     grounds_list_view,
     grounds_create_view,
     grounds_edit_view,
@@ -14,24 +14,21 @@ from .views import (
     admin_profile_view,
     user_edit_view,
     user_delete_view,
-
-    all_grounds_view,
     user_grounds_view,
     grounds_detail_view,
-
-
+    all_grounds_view
 )
 
 urlpatterns = [
-    path("", home_page_view, name='home'),    
-    path('signin/', signin_view, name="signin"),
+    # Public / general
+    path('', home_page_view, name='home'),
+    path('signin/', signin_view, name='signin'),
     path('signup/', signup_view, name='signup'),
-    path('about/', about_view, name='about'),
     path('logout/', logout_view, name='logout'),
-    
+    path('about/', about_view, name='about'),
+
+    # Admin dashboard & management
     path('dashboard/', admin_dashboard_view, name='admin_dashboard'),
-    
-    
     path('dashboard/grounds/', grounds_list_view, name='grounds_list'),
     path('dashboard/grounds/new/', grounds_create_view, name='grounds_create'),
     path('dashboard/grounds/<int:pk>/edit/', grounds_edit_view, name='grounds_edit'),
@@ -41,8 +38,8 @@ urlpatterns = [
     path('dashboard/users/<int:pk>/edit/', user_edit_view, name='user_edit'),
     path('dashboard/users/<int:pk>/delete/', user_delete_view, name='user_delete'),
 
-    # users ground views
-    path('grounds/', all_grounds_view, name='all_grounds'),
+    # User-facing ground views
     path('user/grounds/', user_grounds_view, name='users_grounds'),
-    path('ground/<int:pk>/', grounds_detail_view, name='ground_detail' ),
+    path('ground/<int:pk>/', grounds_detail_view, name='ground_detail'),
+    path('grounds/', all_grounds_view, name='all_grounds'),
 ]

@@ -9,6 +9,7 @@ class FutsalGround(models.Model):
     price_per_hour = models.DecimalField(max_digits=4, decimal_places=0)
     image=models.ImageField(upload_to='grounds', null=True , blank= True)
     is_available=models.BooleanField(default=True)
+    contact_number = models.CharField(max_length=10, blank=True, null=True)
     created_at=models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
