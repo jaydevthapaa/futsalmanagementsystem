@@ -60,13 +60,6 @@
             </div>
             
             {% if nearby_grounds %}
-                <div class="ground-card text-center" style="background: #f8f9fa; border-left: 4px solid #8cd13c;">
-                    <p style="margin: 0; color: #666;">
-                        Found <strong>{{ nearby_grounds|length }}</strong> ground{{ nearby_grounds|length|pluralize }} 
-                        {% if user_location %}in {{ user_location }}{% else %}near you{% endif %}
-                    </p>
-                </div>
-                
                 <div class="grounds-grid">
                     {% for ground in nearby_grounds %}
                         <div class="ground-card">

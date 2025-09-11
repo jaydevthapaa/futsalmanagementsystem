@@ -6,6 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .forms import SignupForm, FutsalGroundForm, UserEditForm
 from django.contrib.auth.decorators import login_required
+from decimal import Decimal, ROUND_HALF_UP
 from .models import UserProfile, FutsalGround
 # Create your views here.
 def home_page_view(request):
@@ -304,5 +305,61 @@ def all_grounds_view(request):
 @login_required
 def book_ground_view(request, ground_id):
     ground= get_object_or_404(FutsalGround, id=ground_id)
-    return render(request, 'booking/book_ground.html',{'ground':ground})
+
+    # Allow resetting pending payment to return to booking form
+    if request.GET.get('reset') == '1':
+        pending = request.session.get('pending_booking')
+        if pending and pending.get('ground_id') == ground.id:
+            try:
+                del request.session['pending_booking']
+            except KeyError:
+                pass
+        return redirect('book_ground', ground_id=ground.id)
+
+    
+    if request.method == 'POST':
+        action = request.POST.get('action', '').strip()
+        if action == 'pay':
+           
+            pending = request.session.get('pending_booking')
+            if not pending or pending.get('ground_id') != ground.id:
+                return redirect('book_ground', ground_id=ground.id)
+
+            try:
+                del request.session['pending_booking']
+            except KeyError:
+                pass
+
+            messages.success(request, 'Advance payment received. Your booking has been initiated!')
+            return redirect('ground_detail', pk=ground.id)
+        else:
+            date = request.POST.get('date', '').strip()
+            time = request.POST.get('time', '').strip() # Compute 40% advance of price_per_hour
+            price_per_hour = Decimal(str(ground.price_per_hour))
+            advance_amount = (price_per_hour * Decimal('0.40')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+            
+            request.session['pending_booking'] = {
+                'ground_id': ground.id,
+                'date': date,
+                'time': time,
+                'advance_amount': str(advance_amount),
+            }
+
+            
+            return redirect('book_ground', ground_id=ground.id)
+
+    # If session has pending booking, show payment section
+    pending = request.session.get('pending_booking') or {}
+    show_payment = pending.get('ground_id') == ground.id
+    advance_amount = pending.get('advance_amount') if show_payment else None
+
+    context = {
+        'ground': ground,
+        'show_payment': show_payment,
+        'advance_amount': advance_amount,
+        'pending_date': pending.get('date') if show_payment else None,
+        'pending_time': pending.get('time') if show_payment else None,
+    }
+    return render(request, 'booking/book_ground.html', context)
 
