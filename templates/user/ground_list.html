@@ -9,22 +9,27 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
+        <div class="ground-card">
             <h1>Available Futsal Grounds</h1>
-            <div>
-                <a href="{% url 'home' %}" class="nav-link">← Back to Home</a>
+            <div class="booking-actions">
+                <a href="{% url 'home' %}" class="btn">← Back to Home</a>
                 {% if user.is_staff %}
-                    <a href="{% url 'admin_dashboard' %}" class="nav-link">Admin Dashboard</a>
+                    <a href="{% url 'admin_dashboard' %}" class="btn">Admin Dashboard</a>
                 {% endif %}
             </div>
         </div>
 
-        <div class="filter-section">
-            <form method="GET" class="filter-form">
-                <input type="text" name="location" placeholder="Filter by location..." 
-                       value="{{ location_filter }}" class="filter-input">
-                <button type="submit" class="filter-btn">Filter</button>
-                <a href="{% url 'users_grounds' %}"class="filter-btn" style="background: #666; text-decoration: none;">Clear</a>
+        <div class="ground-card">
+            <h3>Search Grounds</h3>
+            <form method="GET">
+                <div class="form-group">
+                    <input type="text" name="location" placeholder="Search by location..." 
+                           value="{{ location_filter }}">
+                </div>
+                <div class="booking-actions">
+                    <button type="submit" class="btn">Search</button>
+                    <a href="{% url 'users_grounds' %}" class="btn btn-secondary">Clear</a>
+                </div>
             </form>
         </div>
 
@@ -48,7 +53,7 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="no-grounds">
+            <div class="ground-card text-center">
                 <h3>No grounds available</h3>
                 <p>No futsal grounds match your criteria. Try adjusting your filters.</p>
             </div>

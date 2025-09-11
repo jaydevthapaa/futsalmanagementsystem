@@ -54,32 +54,56 @@
 
     <!-- Nearby Grounds -->
     {% if user.is_authenticated %}
-        <section class="about-content content-container">
-    <h2>Futsal Grounds Near You</h2>
-    {% if nearby_grounds %}
-    <div class="nearby-grounds-list">
-        {% for ground in nearby_grounds %}
-        <div class="ground-item" style="background-image: url('{{ ground.image.url }}');">
-            <div class="ground-overlay">
-                <h3>{{ ground.name }}</h3>
-                <p><strong>Location:</strong> {{ ground.location }}</p>
-                <p><strong>Price:</strong> Rs. {{ ground.price_per_hour }}/hour</p>
-                {% if ground.description %}
-                    <p>{{ ground.description|truncatechars:100 }}</p>
-                {% endif %}
-                <a href="{% url 'ground_detail' ground.pk %}" class="btn-secondary">View Details</a>
+        <section class="container">
+            <div class="ground-card">
+                <h2>Futsal Grounds Near You</h2>
             </div>
-        </div>
-        {% endfor %}
-    </div>
-    <div class="text-center" style="margin-top: 20px;">
-        <a href="{% url 'users_grounds' %}" class="cta-button">View All Grounds</a>
-    </div>
-    {% else %}
-        <p class="text-center">No nearby grounds found. <a href="{% url 'users_grounds' %}">Browse all grounds</a>.</p>
-    {% endif %}
-</section>
-
+            
+            {% if nearby_grounds %}
+                <div class="ground-card text-center" style="background: #f8f9fa; border-left: 4px solid #8cd13c;">
+                    <p style="margin: 0; color: #666;">
+                        Found <strong>{{ nearby_grounds|length }}</strong> ground{{ nearby_grounds|length|pluralize }} 
+                        {% if user_location %}in {{ user_location }}{% else %}near you{% endif %}
+                    </p>
+                </div>
+                
+                <div class="grounds-grid">
+                    {% for ground in nearby_grounds %}
+                        <div class="ground-card">
+                            {% if ground.image %}
+                                <img src="{{ ground.image.url }}" alt="{{ ground.groundName }}" class="ground-image">
+                            {% endif %}
+                            <div class="ground-name">{{ ground.groundName }}</div>
+                            <div class="ground-location">📍 {{ ground.location }}</div>
+                            <div class="ground-price">Rs. {{ ground.price_per_hour }}/hour</div>
+                            {% if ground.description %}
+                                <p style="color: #666; font-size: 0.9rem;">
+                                    {{ ground.description|truncatechars:100 }}
+                                </p>
+                            {% endif %}
+                            <div class="booking-actions">
+                                <a href="{% url 'ground_detail' ground.pk %}" class="btn">View Details</a>
+                                <a href="{% url 'book_ground' ground.id %}" class="book-btn">📅 Book Now</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="text-center mt-20">
+                    <a href="{% url 'users_grounds' %}" class="btn">View All Grounds</a>
+                </div>
+            {% else %}
+                <div class="ground-card text-center">
+                    {% if user_location %}
+                        <p>No grounds found in <strong>{{ user_location }}</strong>.</p>
+                        <p>Try updating your address in your profile or <a href="{% url 'users_grounds' %}">browse all grounds</a>.</p>
+                    {% else %}
+                        <p>Add your address to your profile to see grounds near you!</p>
+                        <p>Or <a href="{% url 'users_grounds' %}">browse all grounds</a>.</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </section>
     {% endif %}
 
     <script src="{% static 'auto_hide_alerts.js' %}"></script>

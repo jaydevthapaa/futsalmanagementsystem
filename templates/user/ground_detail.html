@@ -16,48 +16,36 @@
             </div>
         </div>
 
-        <div class="ground-detail">
+        <div class="ground-card">
             {% if ground.image %}
                 <img src="{{ ground.image.url }}" alt="{{ ground.groundName }}" class="ground-image">
             {% endif %}
 
-            <h1 class="ground-title">{{ ground.groundName }}</h1>
+            <h1 class="ground-name">{{ ground.groundName }}</h1>
 
-            <div class="ground-info">
-                <div class="info-item">
-                    <div class="info-label">Location</div>
-                    <div class="info-value">📌 {{ ground.location }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">Price per hour</div>
-                    <div class="info-value price-highlight">Rs. {{ ground.price_per_hour }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">Contact</div>
-                    {% if ground.contact_number %}
-                        📞 {{ ground.contact_number }}
-                    {% else %}
-                        Not provided
-                    {% endif %}
-                </div>
+            <div class="booking-info">
+                <h3>Ground Information</h3>
+                <p><strong>Location:</strong> 📌 {{ ground.location }}</p>
+                <p><strong>Price:</strong> <span class="price">Rs. {{ ground.price_per_hour }}/hour</span></p>
+                {% if ground.contact_number %}
+                    <p><strong>Contact:</strong> 📞 {{ ground.contact_number }}</p>
+                {% endif %}
+                <p><strong>Added:</strong> {{ ground.created_at|date:"F d, Y" }}</p>
             </div>
 
-            <div class="info-item">
-                <div class="info-label">Added on</div>
-                <div class="info-value">{{ ground.created_at|date:"F d, Y" }}</div>
+            <div class="booking-actions">
+                <a href="{% url 'book_ground' ground.id %}" class="book-btn">📅 Book Now</a>
+                <a href="{% url 'users_grounds' %}" class="back-btn">← Back to Grounds</a>
             </div>
         </div>
 
         {% if ground.description %}
-            <div>
+            <div class="ground-card">
                 <h3>Description</h3>
                 <div class="ground-description">{{ ground.description|linebreaks }}</div>
             </div>
         {% endif %}
-
-        <a href="{% url 'users_grounds' %}" class="back-btn">Back to all grounds</a>
     </div>
 </body>
 </html>
+

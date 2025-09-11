@@ -16,7 +16,8 @@ from .views import (
     user_delete_view,
     user_grounds_view,
     grounds_detail_view,
-    all_grounds_view
+    all_grounds_view,
+    book_ground_view,
 )
 
 urlpatterns = [
@@ -42,4 +43,7 @@ urlpatterns = [
     path('user/grounds/', user_grounds_view, name='users_grounds'),
     path('ground/<int:pk>/', grounds_detail_view, name='ground_detail'),
     path('grounds/', all_grounds_view, name='all_grounds'),
+
+    #booking url
+    path('book/<int:ground_id>/', book_ground_view, name='book_ground'),
 ]

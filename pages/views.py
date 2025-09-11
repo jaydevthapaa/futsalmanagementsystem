@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth import authenticate,login, logout
 from django.contrib import messages
@@ -10,21 +10,31 @@ from .models import UserProfile, FutsalGround
 # Create your views here.
 def home_page_view(request):
     nearby_grounds = []
+    user_location = None
     if request.user.is_authenticated:
         try:
             profile = UserProfile.objects.get(user=request.user)
             user_address = (profile.address or '').strip()
             if user_address:
+                user_location = user_address
+                # First try exact match - show ALL grounds in the same location
                 nearby_grounds = list(
-                    FutsalGround.objects.filter(location__iexact=user_address)[:5]
+                    FutsalGround.objects.filter(location__iexact=user_address)
                 )
+                
+                # If no exact match, try partial match - show up to 10 grounds
                 if not nearby_grounds:
                     nearby_grounds = list(
-                        FutsalGround.objects.filter(location__icontains=user_address)[:5]
+                        FutsalGround.objects.filter(location__icontains=user_address)[:10]
                     )
         except UserProfile.DoesNotExist:
             pass
-    return render(request, "home.html", {"nearby_grounds": nearby_grounds})
+    
+    context = {
+        "nearby_grounds": nearby_grounds,
+        "user_location": user_location
+    }
+    return render(request, "home.html", context)
 
 
 # signin view
@@ -290,3 +300,9 @@ def all_grounds_view(request):
         'all_locations':all_locations,
     }
     return render(request,'ground_list.html', context)
+#booking ground
+@login_required
+def book_ground_view(request, ground_id):
+    ground= get_object_or_404(FutsalGround, id=ground_id)
+    return render(request, 'booking/book_ground.html',{'ground':ground})
+
