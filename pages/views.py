@@ -359,7 +359,7 @@ def book_ground_view(request, ground_id):
     # Final context (add ground_id)
     context = {
         'ground': ground,
-        'ground_id': ground.id,  # Add this line
+        'ground_id': ground.id, 
         'show_payment': show_payment,
         'advance_amount': advance_amount,
         'pending_date': pending.get('date') if show_payment else None,
@@ -385,19 +385,19 @@ def initiate_payment_view(request):
 
 
     payload = json.dumps({
-        "return_url": "return_url",
+        "return_url": return_url,
         "website_url": "http://127.0.0.1:8000",
         "amount": amount,
         "purchase_order_id": purchase_order_id,
-        "purchase_order_name": "test",
+        "purchase_order_name": "Ground Booking",
         "customer_info": {
         "name":user.username,
         "email": user.email,
-        "phone": user.phone_number,
+        "phone": user.userprofile.phone_number,
         }
     })
     headers = {
-        'Authorization': 'key live_secret_key_68791341fdd94846a146f0457ff7b455',
+        'Authorization': 'key 9a4a719c4a044bd09710344117cd5f55',
         'Content-Type': 'application/json',
     }
 

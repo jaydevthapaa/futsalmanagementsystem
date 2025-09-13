@@ -50,6 +50,6 @@ urlpatterns = [
     path('book/<int:ground_id>/', book_ground_view, name='book_ground'),
 
     #khalti url
-    path('initiate', initiate_payment_view, name="initate"),
+    path('initiate', initiate_payment_view, name="initiate"),
     path('verify', verify_payment_view,name='verify'),
 ]
