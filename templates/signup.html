@@ -26,74 +26,47 @@
         <div class="auth-form">
             <form method="post">
                 {% csrf_token %}
-                {% if form %}
-                    <div class="form-group">
-                        <label for="{{ form.username.id_for_label }}">Username</label>
-                        {{ form.username }}
-                        {% if form.username.errors %}
-                            <div class="field-error">
-                                {{ form.username.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ form.email.id_for_label }}">Email</label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                            <div class="field-error">
-                                {{ form.email.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ form.address.id_for_label }}">Address</label>
-                        {{ form.address }}
-                        {% if form.address.errors %}
-                            <div class="field-error">
-                                {{ form.address.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ form.password1.id_for_label }}">Password</label>
-                        {{ form.password1 }}
-                        {% if form.password1.errors %}
-                            <div class="field-error">
-                                {{ form.password1.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
-                        {{ form.password2 }}
-                        {% if form.password2.errors %}
-                            <div class="field-error">
-                                {{ form.password2.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="address">Address</label>
-                        <input type="text" id="address" name="address">
-                    </div>
-                    <div class="form-group">
-                        <label for="password1">Password</label>
-                        <input type="password" id="password1" name="password1" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password2">Confirm Password</label>
-                        <input type="password" id="password2" name="password2" required>
-                    </div>
-                {% endif %}
+                
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone_number">Phone Number</label>
+                    <input type="tel" id="phone_number" name="phone_number" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password1">Password</label>
+                    <input type="password" id="password1" name="password1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password2">Confirm Password</label>
+                    <input type="password" id="password2" name="password2" required>
+                </div>
+                
                 <button type="submit" class="btn">Sign Up</button>
             </form>
             

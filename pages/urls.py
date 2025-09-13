@@ -18,6 +18,8 @@ from .views import (
     grounds_detail_view,
     all_grounds_view,
     book_ground_view,
+    initiate_payment_view,
+    verify_payment_view,
 )
 
 urlpatterns = [
@@ -46,4 +48,8 @@ urlpatterns = [
 
     #booking url
     path('book/<int:ground_id>/', book_ground_view, name='book_ground'),
+
+    #khalti url
+    path('initiate', initiate_payment_view, name="initate"),
+    path('verify', verify_payment_view,name='verify'),
 ]

@@ -8,6 +8,11 @@ from .forms import SignupForm, FutsalGroundForm, UserEditForm
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal, ROUND_HALF_UP
 from .models import UserProfile, FutsalGround
+
+
+#khaltii
+import requests
+import json
 # Create your views here.
 def home_page_view(request):
     nearby_grounds = []
@@ -316,11 +321,14 @@ def book_ground_view(request, ground_id):
                 pass
         return redirect('book_ground', ground_id=ground.id)
 
+    # Check for pending booking first (move this up)
+    pending = request.session.get('pending_booking') or {}
+    show_payment = pending.get('ground_id') == ground.id
+    advance_amount = pending.get('advance_amount') if show_payment else None
     
     if request.method == 'POST':
         action = request.POST.get('action', '').strip()
         if action == 'pay':
-           
             pending = request.session.get('pending_booking')
             if not pending or pending.get('ground_id') != ground.id:
                 return redirect('book_ground', ground_id=ground.id)
@@ -334,32 +342,71 @@ def book_ground_view(request, ground_id):
             return redirect('ground_detail', pk=ground.id)
         else:
             date = request.POST.get('date', '').strip()
-            time = request.POST.get('time', '').strip() # Compute 40% advance of price_per_hour
+            time = request.POST.get('time', '').strip()
+            # Compute 40% advance of price_per_hour
             price_per_hour = Decimal(str(ground.price_per_hour))
             advance_amount = (price_per_hour * Decimal('0.40')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
-            
             request.session['pending_booking'] = {
                 'ground_id': ground.id,
                 'date': date,
                 'time': time,
                 'advance_amount': str(advance_amount),
             }
-
             
             return redirect('book_ground', ground_id=ground.id)
 
-    # If session has pending booking, show payment section
-    pending = request.session.get('pending_booking') or {}
-    show_payment = pending.get('ground_id') == ground.id
-    advance_amount = pending.get('advance_amount') if show_payment else None
-
+    # Final context (add ground_id)
     context = {
         'ground': ground,
+        'ground_id': ground.id,  # Add this line
         'show_payment': show_payment,
         'advance_amount': advance_amount,
         'pending_date': pending.get('date') if show_payment else None,
         'pending_time': pending.get('time') if show_payment else None,
     }
     return render(request, 'booking/book_ground.html', context)
+   
+
+#khalti integration view
+
+def initiate_payment_view(request):
+
+
+    url = "https://dev.khalti.com/api/v2/epayment/initiate/"
+    return_url=request.POST.get('return_url')
+    purchase_order_id = request.POST.get('purchase_order_id')
+    amount= request.POST.get('amount')
+
+    print("return_url",return_url)
+    print("purchase_order_id",purchase_order_id)
+    print("amount",amount)
+    user= request.user
+
+
+    payload = json.dumps({
+        "return_url": "return_url",
+        "website_url": "http://127.0.0.1:8000",
+        "amount": amount,
+        "purchase_order_id": purchase_order_id,
+        "purchase_order_name": "test",
+        "customer_info": {
+        "name":user.username,
+        "email": user.email,
+        "phone": user.phone_number,
+        }
+    })
+    headers = {
+        'Authorization': 'key live_secret_key_68791341fdd94846a146f0457ff7b455',
+        'Content-Type': 'application/json',
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    print(response.text)
+    return redirect("home")
+    pass
+
+def verify_payment_view():
+    pass
 
