@@ -414,7 +414,6 @@ def verify_payment_view(request):
     pidx= request.GET.get('pidx')
     if not pidx:
         return JsonResponse({'error':'pidx parameter is required'},status=400)
-
     headers={
         'Authorization': 'key 9a4a719c4a044bd09710344117cd5f55',
         'Content-Type': 'application/json',   
@@ -426,10 +425,7 @@ def verify_payment_view(request):
     try:
         response = requests.post(url, headers=headers, data=payload)  
         print(response.text)
-        
-     
         response.raise_for_status()
-        
         new_response = json.loads(response.text)
         print(new_response)
         return redirect('home')
