@@ -50,6 +50,7 @@
                 <p><strong>Date:</strong> {{ pending_date }}</p>
                 <p><strong>Time:</strong> {{ pending_time }}</p>
                 <p><strong>Advance (40% of hourly price):</strong> <span class="price">Rs. {{ advance_amount }}</span></p>
+                <strong>Note:</strong><p style="color: red"><strong>⚠️Advance cannot be refunded if you cancel the ground later⚠️</strong></p>
             </div>
 
             <div class="booking-actions" style="gap: 12px; flex-wrap: wrap; justify-content: center;">
@@ -61,8 +62,6 @@
                         Pay with eSewa
                     </button>
                 </form>
-
-    
                 <form method="post" style="display:inline-block;" action="{%url 'initiate'%}">
                     {% csrf_token %}
                     <input type="hidden" name="purchase_order_id" value="{{ground_id}}">

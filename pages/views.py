@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate,login, logout
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
@@ -404,9 +404,44 @@ def initiate_payment_view(request):
     response = requests.request("POST", url, headers=headers, data=payload)
 
     print(response.text)
-    return redirect("home")
-    pass
+    new_response= json.loads(response.text)
+    print(new_response)
+    return redirect(new_response['payment_url'])
+    
 
-def verify_payment_view():
-    pass
+def verify_payment_view(request):
+    url = "https://dev.khalti.com/api/v2/epayment/lookup/",  
+    pidx= request.GET.get('pidx')
+    if not pidx:
+        return JsonResponse({'error':'pidx parameter is required'},status=400)
 
+    headers={
+        'Authorization': 'key 9a4a719c4a044bd09710344117cd5f55',
+        'Content-Type': 'application/json',   
+    }
+    payload=json.dumbs({
+        'pidx':pidx,   
+    })
+    
+    try:
+        response = requests.post(url, headers=headers, data=payload)  
+        print(response.text)
+        
+     
+        response.raise_for_status()
+        
+        new_response = json.loads(response.text)
+        print(new_response)
+        return redirect('home')
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        return JsonResponse({'error': 'Payment verification failed'}, status=500)
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {e}")
+        return JsonResponse({'error': 'Invalid response format'}, status=500)
+    
+
+
+
+  
