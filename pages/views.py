@@ -8,8 +8,8 @@ from .forms import SignupForm, FutsalGroundForm, UserEditForm
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal, ROUND_HALF_UP
 from .models import UserProfile, FutsalGround
-
-
+# esewaa intergration
+import hmac, hashlib, base64, uuid
 #khaltii
 import requests
 import json
@@ -307,66 +307,71 @@ def all_grounds_view(request):
     }
     return render(request,'ground_list.html', context)
 #booking ground
+def generate_esewa_signature(amount, transaction_id, product_code="EPAYTEST"):
+    
+    data = f"{amount}{transaction_id}{product_code}"
+    return hashlib.sha256(data.encode()).hexdigest()
+
 @login_required
 def book_ground_view(request, ground_id):
-    ground= get_object_or_404(FutsalGround, id=ground_id)
+    ground = get_object_or_404(FutsalGround, id=ground_id)
 
-    # Allow resetting pending payment to return to booking form
+    # Initialize variables to avoid UnboundLocalError
+    show_payment = False
+    esewa_signature = ""
+    pending_date = None
+    pending_time = None
+    advance_amount = None
+    transaction_id = None
+
+    # Reset pending booking if needed
     if request.GET.get('reset') == '1':
-        pending = request.session.get('pending_booking')
-        if pending and pending.get('ground_id') == ground.id:
-            try:
-                del request.session['pending_booking']
-            except KeyError:
-                pass
-        return redirect('book_ground', ground_id=ground.id)
+        if 'pending_booking' in request.session:
+            del request.session['pending_booking']
 
-    # Check for pending booking first (move this up)
-    pending = request.session.get('pending_booking') or {}
-    show_payment = pending.get('ground_id') == ground.id
-    advance_amount = pending.get('advance_amount') if show_payment else None
-    
+    # Handle form submission
     if request.method == 'POST':
-        action = request.POST.get('action', '').strip()
-        if action == 'pay':
-            pending = request.session.get('pending_booking')
-            if not pending or pending.get('ground_id') != ground.id:
-                return redirect('book_ground', ground_id=ground.id)
+        date = request.POST.get('date')
+        time = request.POST.get('time')
 
-            try:
-                del request.session['pending_booking']
-            except KeyError:
-                pass
+        # Save pending booking in session
+        request.session['pending_booking'] = {
+            'ground_id': ground.id,
+            'date': date,
+            'time': time,
+        }
 
-            messages.success(request, 'Advance payment received. Your booking has been initiated!')
-            return redirect('ground_detail', pk=ground.id)
-        else:
-            date = request.POST.get('date', '').strip()
-            time = request.POST.get('time', '').strip()
-            # Compute 40% advance of price_per_hour
-            price_per_hour = Decimal(str(ground.price_per_hour))
-            advance_amount = (price_per_hour * Decimal('0.40')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        # Prepare payment data
+        show_payment = True
+        pending_date = date
+        pending_time = time
+        advance_amount = ground.price_per_hour * Decimal('0.4')
+        transaction_id = str(uuid.uuid4())  # unique transaction id
+        esewa_signature = generate_esewa_signature(advance_amount, transaction_id)
 
-            request.session['pending_booking'] = {
-                'ground_id': ground.id,
-                'date': date,
-                'time': time,
-                'advance_amount': str(advance_amount),
-            }
-            
-            return redirect('book_ground', ground_id=ground.id)
+    # If pending booking exists in session, pre-fill payment
+    elif request.session.get('pending_booking'):
+        pending = request.session['pending_booking']
+        if pending.get('ground_id') == ground.id:
+            show_payment = True
+            pending_date = pending.get('date')
+            pending_time = pending.get('time')
+            advance_amount = round(0.4 * ground.price_per_hour, 2)
+            transaction_id = str(uuid.uuid4())
+            esewa_signature = generate_esewa_signature(advance_amount, transaction_id)
 
-    # Final context (add ground_id)
     context = {
         'ground': ground,
-        'ground_id': ground.id, 
         'show_payment': show_payment,
+        'pending_date': pending_date,
+        'pending_time': pending_time,
         'advance_amount': advance_amount,
-        'pending_date': pending.get('date') if show_payment else None,
-        'pending_time': pending.get('time') if show_payment else None,
+        'transaction_id': transaction_id,
+        'esewa_signature': esewa_signature,
+        'ground_id': ground.id,
     }
+
     return render(request, 'booking/book_ground.html', context)
-   
 
 #khalti integration view
 
@@ -438,6 +443,11 @@ def verify_payment_view(request):
         return JsonResponse({'error': 'Invalid response format'}, status=500)
     
 
+#esewa 
 
+def payment_success_view(request):
+    pass
 
-  
+def payment_faliure_view(request):
+    pass
+

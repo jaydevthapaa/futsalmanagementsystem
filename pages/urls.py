@@ -20,6 +20,8 @@ from .views import (
     book_ground_view,
     initiate_payment_view,
     verify_payment_view,
+    payment_success_view,
+    payment_faliure_view,
 )
 
 urlpatterns = [
@@ -52,4 +54,8 @@ urlpatterns = [
     #khalti url
     path('initiate', initiate_payment_view, name="initiate"),
     path('verify', verify_payment_view,name='verify'),
+    
+    #esewa url
+    path('payment_success', payment_success_view, name='payment_success'),
+    path('payment_failure', payment_faliure_view, name='payment_faliure'),
 ]
