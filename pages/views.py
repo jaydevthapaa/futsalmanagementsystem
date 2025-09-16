@@ -320,6 +320,7 @@ def generate_esewa_signature(secret_key, params, signed_fields):
 
 
 @login_required
+@login_required
 def book_ground_view(request, ground_id):
     ground = get_object_or_404(FutsalGround, id=ground_id)
     show_payment = False
@@ -329,6 +330,8 @@ def book_ground_view(request, ground_id):
     transaction_id = None
     esewa_signature = None
     signed_fields = "total_amount,transaction_uuid,product_code"
+    success_url = None
+    failure_url = None
 
     if request.method == "POST":
         date = request.POST.get("date")
@@ -348,6 +351,24 @@ def book_ground_view(request, ground_id):
         transaction_id = str(uuid.uuid4())
         product_code = "EPAYTEST"
         secret_key = "8gBm/:&EnhH.1/q"
+
+        # Build proper URLs with protocol
+        if request.is_secure():
+            protocol = 'https'
+        else:
+            protocol = 'http'
+
+        host = request.get_host()
+
+        success_url = f"{protocol}://{host}/esewa/success/"
+        failure_url = f"{protocol}://{host}/esewa/failure/"
+       
+        print(f"Manual URLs - Success: {success_url}, Failure: {failure_url}")
+        #  Print the URLs being generated
+        print(f"DEBUG - Success URL: {success_url}")
+        print(f"DEBUG - Failure URL: {failure_url}")
+        print(f"DEBUG - Request is_secure: {request.is_secure()}")
+        print(f"DEBUG - Request get_host: {request.get_host()}")
 
         params = {
             "total_amount": str(advance_amount),
@@ -370,6 +391,8 @@ def book_ground_view(request, ground_id):
         "transaction_id": transaction_id,
         "esewa_signature": esewa_signature,
         "signed_fields": signed_fields,
+        "success_url": success_url,
+        "failure_url": failure_url,
     }
 
     return render(request, "booking/book_ground.html", context)
@@ -413,7 +436,7 @@ def initiate_payment_view(request):
     print(response.text)
     new_response= json.loads(response.text)
     print(new_response)
-    return redirect(new_response['payment_url'])
+    return redirect(['payment_url'])
     
 
 def verify_payment_view(request):
@@ -451,7 +474,7 @@ def payment_success_view(request):
     messages.success(request, "Payment successful! Your booking is confirmed.")
     return redirect('users_grounds') 
 
-def  payment_faliure_view(request):  
+def  payment_failure_view(request):  
     
     messages.error(request, "Payment failed! Please try again.")
     return redirect('book_ground', ground_id=request.session.get('pending_booking', {}).get('ground_id'))

@@ -64,8 +64,8 @@
                     <input type="hidden" name="product_code" value="EPAYTEST">
                     <input type="hidden" name="product_service_charge" value="0">
                     <input type="hidden" name="product_delivery_charge" value="0">
-                    <input type="hidden" name="success_url" value="{% url 'payment_success' %}">
-                    <input type="hidden" name="failure_url" value="{% url 'payment_failure' %}">
+                    <input type="hidden" name="success_url" value="{{success_url}}">
+                    <input type="hidden" name="failure_url" value="{{failure_url}}">
                     <input type="hidden" name="signed_field_names" value="{{ signed_fields }}">
                     <input type="hidden" name="signature" value="{{ esewa_signature }}">
                     <button type="submit" class="btn" style="display:flex; align-items:center; gap:8px;">

@@ -21,7 +21,7 @@ from .views import (
     initiate_payment_view,
     verify_payment_view,
     payment_success_view,
-    payment_faliure_view,
+    payment_failure_view,
 )
 
 urlpatterns = [
@@ -56,6 +56,6 @@ urlpatterns = [
     path('verify', verify_payment_view,name='verify'),
     
     #esewa url
-    path('payment_success', payment_success_view, name='payment_success'),
-    path('payment_failure', payment_faliure_view, name='payment_failure'),
+    path('esewa/success', payment_success_view, name='payment_success'),
+    path('esewa/failure', payment_failure_view, name='payment_failure'),
 ]
