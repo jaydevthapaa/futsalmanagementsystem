@@ -307,6 +307,7 @@ def all_grounds_view(request):
         'all_locations':all_locations,
     }
     return render(request,'ground_list.html', context)
+
 #booking ground
 
 
@@ -446,11 +447,11 @@ def verify_payment_view(request):
 
 #esewa 
 def payment_success_view(request):
-    # Here you can mark the booking as paid
+    
     messages.success(request, "Payment successful! Your booking is confirmed.")
-    return redirect('users_grounds')  # Redirect to your grounds list or booking page
+    return redirect('users_grounds') 
 
-def  payment_faliure_view(request):  # Fixed: "failure" not "faliure"
-    # Here you can show a failure message
+def  payment_faliure_view(request):  
+    
     messages.error(request, "Payment failed! Please try again.")
     return redirect('book_ground', ground_id=request.session.get('pending_booking', {}).get('ground_id'))
