@@ -9,10 +9,11 @@ from django.contrib.auth.decorators import login_required
 from decimal import Decimal, ROUND_HALF_UP
 from .models import UserProfile, FutsalGround
 # esewaa intergration
-import hmac, hashlib, base64, uuid
+import hmac, hashlib, base64,uuid
 #khaltii
 import requests
 import json
+
 # Create your views here.
 def home_page_view(request):
     nearby_grounds = []
@@ -307,71 +308,71 @@ def all_grounds_view(request):
     }
     return render(request,'ground_list.html', context)
 #booking ground
-def generate_esewa_signature(amount, transaction_id, product_code="EPAYTEST"):
-    
-    data = f"{amount}{transaction_id}{product_code}"
-    return hashlib.sha256(data.encode()).hexdigest()
+
+
+def generate_esewa_signature(secret_key, params, signed_fields):
+    signing_string = ','.join(f"{field}={params[field]}" for field in signed_fields.split(','))
+    digest = hmac.new(secret_key.encode('utf-8'), signing_string.encode('utf-8'), hashlib.sha256).digest()
+    return base64.b64encode(digest).decode('utf-8')
+
+
+
 
 @login_required
 def book_ground_view(request, ground_id):
     ground = get_object_or_404(FutsalGround, id=ground_id)
-
-    # Initialize variables to avoid UnboundLocalError
     show_payment = False
-    esewa_signature = ""
     pending_date = None
     pending_time = None
     advance_amount = None
     transaction_id = None
+    esewa_signature = None
+    signed_fields = "total_amount,transaction_uuid,product_code"
 
-    # Reset pending booking if needed
-    if request.GET.get('reset') == '1':
-        if 'pending_booking' in request.session:
-            del request.session['pending_booking']
+    if request.method == "POST":
+        date = request.POST.get("date")
+        time = request.POST.get("time")
 
-    # Handle form submission
-    if request.method == 'POST':
-        date = request.POST.get('date')
-        time = request.POST.get('time')
-
-        # Save pending booking in session
-        request.session['pending_booking'] = {
-            'ground_id': ground.id,
-            'date': date,
-            'time': time,
+        # Save session
+        request.session["pending_booking"] = {
+            "ground_id": ground.id,
+            "date": date,
+            "time": time,
         }
 
-        # Prepare payment data
+        # Calculate advance
+        advance_amount = (ground.price_per_hour * Decimal("0.4")).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        transaction_id = str(uuid.uuid4())
+        product_code = "EPAYTEST"
+        secret_key = "8gBm/:&EnhH.1/q"
+
+        params = {
+            "total_amount": str(advance_amount),
+            "transaction_uuid": transaction_id,
+            "product_code": product_code,
+        }
+
+        esewa_signature = generate_esewa_signature(secret_key, params, signed_fields)
+
         show_payment = True
         pending_date = date
         pending_time = time
-        advance_amount = ground.price_per_hour * Decimal('0.4')
-        transaction_id = str(uuid.uuid4())  # unique transaction id
-        esewa_signature = generate_esewa_signature(advance_amount, transaction_id)
-
-    # If pending booking exists in session, pre-fill payment
-    elif request.session.get('pending_booking'):
-        pending = request.session['pending_booking']
-        if pending.get('ground_id') == ground.id:
-            show_payment = True
-            pending_date = pending.get('date')
-            pending_time = pending.get('time')
-            advance_amount = round(0.4 * ground.price_per_hour, 2)
-            transaction_id = str(uuid.uuid4())
-            esewa_signature = generate_esewa_signature(advance_amount, transaction_id)
 
     context = {
-        'ground': ground,
-        'show_payment': show_payment,
-        'pending_date': pending_date,
-        'pending_time': pending_time,
-        'advance_amount': advance_amount,
-        'transaction_id': transaction_id,
-        'esewa_signature': esewa_signature,
-        'ground_id': ground.id,
+        "ground": ground,
+        "show_payment": show_payment,
+        "pending_date": pending_date,
+        "pending_time": pending_time,
+        "advance_amount": advance_amount,
+        "transaction_id": transaction_id,
+        "esewa_signature": esewa_signature,
+        "signed_fields": signed_fields,
     }
 
-    return render(request, 'booking/book_ground.html', context)
+    return render(request, "booking/book_ground.html", context)
+
 
 #khalti integration view
 
@@ -423,7 +424,7 @@ def verify_payment_view(request):
         'Authorization': 'key 9a4a719c4a044bd09710344117cd5f55',
         'Content-Type': 'application/json',   
     }
-    payload=json.dumbs({
+    payload=json.dumps({
         'pidx':pidx,   
     })
     
@@ -444,10 +445,12 @@ def verify_payment_view(request):
     
 
 #esewa 
-
 def payment_success_view(request):
-    pass
+    # Here you can mark the booking as paid
+    messages.success(request, "Payment successful! Your booking is confirmed.")
+    return redirect('users_grounds')  # Redirect to your grounds list or booking page
 
-def payment_faliure_view(request):
-    pass
-
+def  payment_faliure_view(request):  # Fixed: "failure" not "faliure"
+    # Here you can show a failure message
+    messages.error(request, "Payment failed! Please try again.")
+    return redirect('book_ground', ground_id=request.session.get('pending_booking', {}).get('ground_id'))

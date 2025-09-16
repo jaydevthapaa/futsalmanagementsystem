@@ -57,5 +57,5 @@ urlpatterns = [
     
     #esewa url
     path('payment_success', payment_success_view, name='payment_success'),
-    path('payment_failure', payment_faliure_view, name='payment_faliure'),
+    path('payment_failure', payment_faliure_view, name='payment_failure'),
 ]
