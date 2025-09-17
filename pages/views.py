@@ -10,7 +10,9 @@ from decimal import Decimal, ROUND_HALF_UP
 from .models import UserProfile, FutsalGround
 # esewaa intergration
 import hmac, hashlib, base64,uuid
+
 #khaltii
+
 import requests
 import json
 
@@ -289,6 +291,7 @@ def all_grounds_view(request):
     grounds= FutsalGround.objects.all().order_by('groundName')
     
     #adding search functionallity 
+    
     search_query= request.GET.get('search','').strip()
     location_filter= request.GET.get('location','').strip()
 
@@ -298,7 +301,8 @@ def all_grounds_view(request):
     if location_filter:
         grounds= grounds.filter(location__icontains=location_filter)
 
-    #unique location for filter dropdown#
+    #unique location for filter dropdown
+    
     all_locations= FutsalGround.objects.values_list('location',flat=True).distinct()
 
     context={
@@ -310,14 +314,10 @@ def all_grounds_view(request):
 
 #booking ground
 
-
 def generate_esewa_signature(secret_key, params, signed_fields):
     signing_string = ','.join(f"{field}={params[field]}" for field in signed_fields.split(','))
     digest = hmac.new(secret_key.encode('utf-8'), signing_string.encode('utf-8'), hashlib.sha256).digest()
     return base64.b64encode(digest).decode('utf-8')
-
-
-
 
 @login_required
 @login_required
@@ -401,46 +401,48 @@ def book_ground_view(request, ground_id):
 #khalti integration view
 
 def initiate_payment_view(request):
-
-
     url = "https://dev.khalti.com/api/v2/epayment/initiate/"
-    return_url=request.POST.get('return_url')
-    purchase_order_id = request.POST.get('purchase_order_id')
-    amount= request.POST.get('amount')
+    return_url = request.POST.get('return_url', '').strip()   
+    purchase_order_id = request.POST.get('purchase_order_id', '').strip()
+    amount = request.POST.get('amount', '0').strip()
+    user = request.user
 
-    print("return_url",return_url)
-    print("purchase_order_id",purchase_order_id)
-    print("amount",amount)
-    user= request.user
-
+    try:
+        # Convert to paisa (Khalti expects integer)
+        amount_paisa = int(float(amount) * 100)
+    except ValueError:
+        return JsonResponse({'error': 'Invalid amount'}, status=400)
 
     payload = json.dumps({
         "return_url": return_url,
         "website_url": "http://127.0.0.1:8000",
-        "amount": amount,
-        "purchase_order_id": purchase_order_id,
+        "amount": amount_paisa,
+        "purchase_order_id": purchase_order_id or str(uuid.uuid4()),  
         "purchase_order_name": "Ground Booking",
         "customer_info": {
-        "name":user.username,
-        "email": user.email,
-        "phone": user.userprofile.phone_number,
+            "name": user.username,
+            "email": user.email,
+            "phone": getattr(user.userprofile, 'phone_number', '')
         }
     })
+
     headers = {
         'Authorization': 'key 9a4a719c4a044bd09710344117cd5f55',
         'Content-Type': 'application/json',
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.post(url, headers=headers, data=payload)
+    new_response = response.json()
 
-    print(response.text)
-    new_response= json.loads(response.text)
-    print(new_response)
-    return redirect(['payment_url'])
-    
+    print("Khalti response:", new_response)  
+    if 'payment_url' in new_response:
+        return redirect(new_response['payment_url'])
+    else:
+        return JsonResponse(new_response, status=400)  #actual error
+
 
 def verify_payment_view(request):
-    url = "https://dev.khalti.com/api/v2/epayment/lookup/",  
+    url = "https://dev.khalti.com/api/v2/epayment/lookup/" 
     pidx= request.GET.get('pidx')
     if not pidx:
         return JsonResponse({'error':'pidx parameter is required'},status=400)
@@ -471,8 +473,35 @@ def verify_payment_view(request):
 #esewa 
 def payment_success_view(request):
     
-    messages.success(request, "Payment successful! Your booking is confirmed.")
-    return redirect('users_grounds') 
+    # messages.success(request, "Payment successful! Your booking is confirmed.")
+    # return redirect('users_grounds') 
+    oid = request.GET.get("oid")  # order ID (transaction_uuid)
+    amt = request.GET.get("amt")  # amount paid
+    refId = request.GET.get("refId")  # unique reference from eSewa
+
+    if not all([oid, amt, refId]):
+        return JsonResponse({"error": "Missing required parameters"}, status=400)
+
+    # Verify with eSewa
+    url = "https://uat.esewa.com.np/epay/transrec"  # sandbox verify URL
+    payload = {
+        "amt": amt,
+        "scd": "EPAYTEST",   # merchant code (use your live code in production)
+        "rid": refId,
+        "pid": oid,
+    }
+
+    try:
+        response = requests.post(url, data=payload)
+        if "Success" in response.text:
+            # Payment verified 
+            return render(request, "esewa/success.html", {"oid": oid, "amt": amt, "refId": refId})
+        else:
+            # Payment failed 
+            return render(request, "esewa/failure.html", {"oid": oid})
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": f"Verification failed: {e}"}, status=500)
 
 def  payment_failure_view(request):  
     
