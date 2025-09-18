@@ -1,6 +1,4 @@
-/* ===== SIMPLIFIED FUTSAL MANAGEMENT SYSTEM CSS ===== */
 
-/* ===== RESET & BASE STYLES ===== */
 * {
     margin: 0;
     padding: 0;
@@ -15,7 +13,7 @@ body {
     line-height: 1.6;
 }
 
-/* ===== LAYOUT CONTAINERS ===== */
+/*  LAYOUT CONTAINERS  */
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -28,7 +26,7 @@ body {
     padding: 0 20px;
 }
 
-/* ===== NAVIGATION ===== */
+/* NAVIGATION */
 .navbar {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -69,7 +67,7 @@ body {
     color: #8cd13c;
 }
 
-/* ===== HERO SECTIONS ===== */
+/*  HERO SECTIONS*/
 .hero-section {
     text-align: center;
     color: white;
@@ -97,7 +95,7 @@ body {
     margin-bottom: 30px;
 }
 
-/* ===== BUTTONS ===== */
+/*  BUTTONS */
 .btn, .cta-button, .auth-button, .book-btn, .back-btn, .view-details-btn, .filter-btn {
     display: inline-block;
     padding: 12px 24px;
@@ -135,7 +133,7 @@ body {
     background: #c82333;
 }
 
-/* ===== FORMS ===== */
+/* FORMS  */
 .auth-container {
     max-width: 500px;
     margin: 50px auto;
@@ -151,7 +149,7 @@ body {
     padding: 30px;
 }
 
-/* ===== AUTH HEADER STYLES ===== */
+/* AUTH HEADER STYLES*/
 .auth-container .booking-header {
     background: linear-gradient(135deg, #8cd13c 0%, #6ba832 100%);
     color: white;
@@ -226,7 +224,7 @@ body {
     font-weight: 500;
 }
 
-/* ===== BOOKING FORM STYLES ===== */
+/*BOOKING FORM STYLES  */
 .booking-container {
     max-width: 600px;
     margin: 40px auto;
@@ -451,7 +449,7 @@ body {
     color: #8cd13c;
 }
 
-/* ===== TABLES ===== */
+/*  TABLES*/
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -481,7 +479,7 @@ body {
     background: #f8f9fa;
 }
 
-/* ===== ALERTS ===== */
+/*  ALERTS  */
 .alert {
     padding: 15px;
     margin: 15px 0;
@@ -507,7 +505,7 @@ body {
     opacity: 0;
 }
 
-/* ===== UTILITY CLASSES ===== */
+/* UTILITY CLASSES  */
 .text-center {
     text-align: center;
 }
@@ -529,7 +527,7 @@ body {
     color: #8cd13c;
 }
 
-/* ===== FOOTER ===== */
+/*  FOOTER */
 .footer {
     background: #333;
     color: white;
@@ -542,7 +540,7 @@ body {
     margin: 5px 0;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
+/* RESPONSIVE DESIGN  */
 @media (max-width: 768px) {
     .container {
         padding: 10px;
@@ -598,4 +596,167 @@ body {
         margin: 20px;
         padding: 20px;
     }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .ground-background {
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .ground-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+        }
+        
+        .container {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .success-icon {
+            background: #28a745;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .title {
+            color: #28a745;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .details {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .detail-value {
+            color: #212529;
+        }
+        
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .badge-esewa {
+            background: #28a745;
+        }
+        
+        .badge-khalti {
+            background: #5d2e91;
+        }
+        
+        .notification {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            color: #856404;
+        }
+        
+        .buttons {
+            margin-top: 20px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            margin: 5px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .support {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .detail-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .btn {
+                display: block;
+                margin: 10px 0;
+            }
+        }
 }

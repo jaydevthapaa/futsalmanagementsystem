@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - FutsalThings</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+</head>
+<body>
+    <div class="container" style="background-image: url('{{ ground_image }}'); background-size: cover; background-position: center; background-repeat: no-repeat; padding: 30px; border-radius: 8px; color: white; text-shadow: 1px 1px 2px black;">
+        <div class="success-icon" style="font-size: 48px; color: #28a745; text-align: center; margin-bottom: 20px;">
+            ✓
+        </div>
+        
+        <h1 class="title" style="text-align: center; font-size: 28px; margin-bottom: 10px; font-weight: bold;">Payment Successful!</h1>
+        <p class="subtitle" style="text-align: center; font-size: 18px; margin-bottom: 30px; color: #f0f0f0;">Thank you for your booking, {{ user_name }}!</p>
+        
+        <div class="details" style="margin-bottom: 30px; background: rgba(0, 0, 0, 0.5); padding: 20px; border-radius: 8px;">
+            <h4 style="text-align: center; margin-bottom: 20px; color: #f0f0f0;">Booking Details</h4>
+            
+            <div class="detail-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                <span class="detail-label" style="font-weight: 600; color: #f0f0f0;">Ground Name:</span>
+                <span class="detail-value" style="font-weight: 400; color: #f0f0f0;">{{ ground_name }}</span>
+            </div>
+            
+            <div class="detail-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                <span class="detail-label" style="font-weight: 600; color: #f0f0f0;">Booking Date:</span>
+                <span class="detail-value" style="font-weight: 400; color: #f0f0f0;">{{ booking_date }}</span>
+            </div>
+            
+            <div class="detail-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                <span class="detail-label" style="font-weight: 600; color: #f0f0f0;">Booking Time:</span>
+                <span class="detail-value" style="font-weight: 400; color: #f0f0f0;">{{ booking_time }}</span>
+            </div>
+            
+            <div class="detail-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                <span class="detail-label" style="font-weight: 600; color: #f0f0f0;">Amount Paid:</span>
+                <span class="detail-value" style="font-weight: 400; color: #f0f0f0;">Rs. {{ amount_paid }}</span>
+            </div>
+            
+            <div class="detail-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                <span class="detail-label" style="font-weight: 600; color: #f0f0f0;">Transaction ID:</span>
+                <span class="detail-value" style="font-weight: 400; color: #f0f0f0;">{{ transaction_id }}</span>
+            </div>
+            
+            <div class="detail-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                <span class="detail-label" style="font-weight: 600; color: #f0f0f0;">Reference ID:</span>
+                <span class="detail-value" style="font-weight: 400; color: #f0f0f0;">{{ reference_id }}</span>
+            </div>
+            
+            <div class="detail-row" style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span class="detail-label" style="font-weight: 600; color: #f0f0f0;">Payment Method:</span>
+                <span class="detail-value" style="font-weight: 400; color: #f0f0f0;">
+                    {% if payment_done_through == 'eSewa' %}
+                        <span class="badge badge-esewa">eSewa</span>
+                    {% elif payment_done_through == 'Khalti' %}
+                        <span class="badge badge-khalti">Khalti</span>
+                    {% else %}
+                        <span class="badge" style="background: #6c757d;">{{ payment_done_through }}</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <div class="notification" style="text-align: center; font-weight: 600; color: #5028a7; margin-bottom: 20px;">
+            <strong>Your confirmation will be notified soon!</strong><br>
+            We will contact you shortly to confirm your booking details. Please keep this transaction reference for your records.
+        </div>
+        
+        <div class="buttons" style="text-align: center;">
+            <a href="{% url 'users_grounds' %}" class="btn" style="display: inline-block; background-color: #28a745; color: white; padding: 12px 25px; margin: 0 10px; border-radius: 5px; text-decoration: none; font-weight: 600; transition: background-color 0.3s ease;">View All Grounds</a>
+            <a href="{% url 'home' %}" class="btn" style="display: inline-block; background-color: #28a745; color: white; padding: 12px 25px; margin: 0 10px; border-radius: 5px; text-decoration: none; font-weight: 600; transition: background-color 0.3s ease;">Back to Home</a>
+        </div>
+        
+        <div class="support" style="text-align: center; margin-top: 30px; font-size: 14px; color: #666;">
+            Need help? Contact our support team at support@futsalthings.com
+        </div>
+    </div>
+</body>
+</html>

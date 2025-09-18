@@ -20,8 +20,10 @@ from .views import (
     book_ground_view,
     initiate_payment_view,
     verify_payment_view,
-    payment_success_view,
-    payment_failure_view,
+    # payment_success_view,
+    # payment_failure_view,
+    payment_successview,
+    payment_success_page_view,
 )
 
 urlpatterns = [
@@ -55,7 +57,12 @@ urlpatterns = [
     path('initiate', initiate_payment_view, name="initiate"),
     path('verify', verify_payment_view,name='verify'),
     
-    #esewa url
-    path('esewa/success', payment_success_view, name='payment_success'),
-    path('esewa/failure', payment_failure_view, name='payment_failure'),
-]
+    # #esewa url
+    # path('esewa/success', payment_success_view, name='payment_success'),
+    # path('esewa/failure', payment_failure_view, name='payment_failure'),
+   
+    # payment Successfull url
+    path('esewa/success/', payment_successview, name='esewa_success'),
+    path('khalti/success/', payment_successview, name='khalti_success'),
+    path('payment/success/', payment_success_page_view, name='payment_success_page'),
+    ]

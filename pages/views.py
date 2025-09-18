@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from .forms import SignupForm, FutsalGroundForm, UserEditForm
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime
 from .models import UserProfile, FutsalGround
 # esewaa intergration
 import hmac, hashlib, base64,uuid
@@ -319,7 +320,7 @@ def generate_esewa_signature(secret_key, params, signed_fields):
     digest = hmac.new(secret_key.encode('utf-8'), signing_string.encode('utf-8'), hashlib.sha256).digest()
     return base64.b64encode(digest).decode('utf-8')
 
-@login_required
+
 @login_required
 def book_ground_view(request, ground_id):
     ground = get_object_or_404(FutsalGround, id=ground_id)
@@ -400,6 +401,79 @@ def book_ground_view(request, ground_id):
 
 #khalti integration view
 
+def verify_payment_view(request):
+    pidx = request.GET.get("pidx")
+    if not pidx:
+        messages.error(request, "Missing payment ID.")
+        return redirect("home")
+
+    url = "https://dev.khalti.com/api/v2/epayment/lookup/"
+    headers = {
+        "Authorization": "key 9a4a719c4a044bd09710344117cd5f55",
+        "Content-Type": "application/json",
+    }
+    payload = json.dumps({"pidx": pidx})
+
+    try:
+        response = requests.post(url, headers=headers, data=payload)
+        response.raise_for_status()
+        khalti_response = response.json()
+
+        if khalti_response.get("status") != "Completed":
+            messages.error(request, "Khalti payment verification failed.")
+            return redirect("home")
+
+        transaction_id = khalti_response.get("transaction_id") or pidx
+        amount_paid = str(khalti_response.get("total_amount", 0) / 100)  # paisa → Rs
+        reference_id = pidx
+
+        # ---- Booking Details from Session ----
+        pending_booking = request.session.get("pending_booking")
+        ground = None
+        ground_name = "Unknown Ground"
+        ground_image = None
+        booking_date = "N/A"
+        booking_time = "N/A"
+
+        if pending_booking:
+            try:
+                ground = FutsalGround.objects.get(id=pending_booking["ground_id"])
+                ground_name = ground.groundName
+                ground_image = ground.image.url if ground.image else None
+                booking_date = pending_booking.get("date", "N/A")
+                booking_time = pending_booking.get("time", "N/A")
+                if booking_time != "N/A":
+                    try:
+                        dt = datetime.strptime(booking_time, "%H:%M")
+                        booking_time = dt.strftime("%I:%M %p")
+                    except ValueError:
+                        pass
+            except FutsalGround.DoesNotExist:
+                pass
+            # clear session
+            del request.session["pending_booking"]
+
+        context = {
+            "transaction_id": transaction_id,
+            "amount_paid": amount_paid,
+            "reference_id": reference_id,
+            "payment_done_through": "Khalti",
+            "ground_name": ground_name,
+            "ground_image": ground_image,
+            "booking_date": booking_date,
+            "booking_time": booking_time,
+            "user_name": request.user.username if request.user.is_authenticated else "Guest",
+        }
+
+        # Store context in session and redirect to success page
+        request.session['payment_success_context'] = context
+        return redirect('payment_success_page')
+
+    except (requests.exceptions.RequestException, json.JSONDecodeError):
+        messages.error(request, "Khalti verification error.")
+        return redirect("home")
+
+
 def initiate_payment_view(request):
     url = "https://dev.khalti.com/api/v2/epayment/initiate/"
     return_url = request.POST.get('return_url', '').strip()   
@@ -441,69 +515,193 @@ def initiate_payment_view(request):
         return JsonResponse(new_response, status=400)  #actual error
 
 
-def verify_payment_view(request):
-    url = "https://dev.khalti.com/api/v2/epayment/lookup/" 
-    pidx= request.GET.get('pidx')
-    if not pidx:
-        return JsonResponse({'error':'pidx parameter is required'},status=400)
-    headers={
-        'Authorization': 'key 9a4a719c4a044bd09710344117cd5f55',
-        'Content-Type': 'application/json',   
-    }
-    payload=json.dumps({
-        'pidx':pidx,   
-    })
+#esewa
+# def payment_success_view(request):
     
-    try:
-        response = requests.post(url, headers=headers, data=payload)  
-        print(response.text)
-        response.raise_for_status()
-        new_response = json.loads(response.text)
-        print(new_response)
-        return redirect('home')
-        
-    except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
-        return JsonResponse({'error': 'Payment verification failed'}, status=500)
-    except json.JSONDecodeError as e:
-        print(f"JSON decode error: {e}")
-        return JsonResponse({'error': 'Invalid response format'}, status=500)
+#     messages.success(request, "Payment successful! Your booking is confirmed.")
+#     return redirect('users_grounds') 
+#     oid = request.GET.get("oid")  
+#     amt = request.GET.get("amt")  
+#     refId = request.GET.get("refId")  
+#     if not all([oid, amt, refId]):
+#         return JsonResponse({"error": "Missing required parameters"}, status=400)
+
+#     # Verify with eSewa
+#     url = "https://uat.esewa.com.np/epay/transrec"  # sandbox verify URL
+#     payload = {
+#         "amt": amt,
+#         "scd": "EPAYTEST",   # merchant code (use your live code in production)
+#         "rid": refId,
+#         "pid": oid,
+#     }
+
+#     try:
+#         response = requests.post(url, data=payload)
+#         if "Success" in response.text:
+#             # Payment verified 
+#             return render(request, "esewa/success.html", {"oid": oid, "amt": amt, "refId": refId})
+#         else:
+#             # Payment failed 
+#             return render(request, "esewa/failure.html", {"oid": oid})
+
+#     except requests.exceptions.RequestException as e:
+#         return JsonResponse({"error": f"Verification failed: {e}"}, status=500)
+
+# def  payment_failure_view(request):  
     
+#     messages.error(request, "Payment failed! Please try again.")
+#     return redirect('book_ground', ground_id=request.session.get('pending_booking', {}).get('ground_id'))
 
-#esewa 
-def payment_success_view(request):
-    
-    # messages.success(request, "Payment successful! Your booking is confirmed.")
-    # return redirect('users_grounds') 
-    oid = request.GET.get("oid")  # order ID (transaction_uuid)
-    amt = request.GET.get("amt")  # amount paid
-    refId = request.GET.get("refId")  # unique reference from eSewa
 
-    if not all([oid, amt, refId]):
-        return JsonResponse({"error": "Missing required parameters"}, status=400)
+# payment success view for both eSewa and Khalti
+def payment_successview(request):
+    # eSewa V2 parameters
+    transaction_uuid = request.GET.get("transaction_uuid")
+    total_amount = request.GET.get("total_amount")
+    refId = request.GET.get("refId")
 
-    # Verify with eSewa
-    url = "https://uat.esewa.com.np/epay/transrec"  # sandbox verify URL
-    payload = {
-        "amt": amt,
-        "scd": "EPAYTEST",   # merchant code (use your live code in production)
-        "rid": refId,
-        "pid": oid,
-    }
+    # Khalti parameters
+    pidx = request.GET.get("pidx")
+    purchase_order_id = request.GET.get("purchase_order_id")
 
-    try:
-        response = requests.post(url, data=payload)
-        if "Success" in response.text:
-            # Payment verified 
-            return render(request, "esewa/success.html", {"oid": oid, "amt": amt, "refId": refId})
+    payment_method = None
+    transaction_id = None
+    amount_paid = None
+    reference_id = None
+
+    # ---- eSewa V2 ----
+    if transaction_uuid and total_amount and refId:
+        payment_method = "eSewa"
+        transaction_id = transaction_uuid
+        amount_paid = total_amount
+        reference_id = refId
+
+        # Verify with eSewa V2 API
+        url = "https://rc-epay.esewa.com.np/api/epay/transaction"
+        payload = {
+            "amount": total_amount,
+            "product_code": "EPAYTEST",  # change in production
+            "transaction_uuid": transaction_uuid,
+            "reference_id": refId,
+        }
+        try:
+            response = requests.post(url, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            if data.get("status") != "COMPLETE":
+                messages.error(request, "eSewa payment verification failed.")
+                return redirect("home")
+        except requests.exceptions.RequestException:
+            messages.error(request, "eSewa verification error.")
+            return redirect("home")
+
+    # ---- Khalti ----
+    elif pidx:
+        payment_method = "Khalti"
+        url = "https://dev.khalti.com/api/v2/epayment/lookup/"
+        headers = {
+            "Authorization": "key 9a4a719c4a044bd09710344117cd5f55",
+            "Content-Type": "application/json",
+        }
+        payload = json.dumps({"pidx": pidx})
+
+        try:
+            response = requests.post(url, headers=headers, data=payload)
+            response.raise_for_status()
+            khalti_response = response.json()
+
+            if khalti_response.get("status") != "Completed":
+                messages.error(request, "Khalti payment verification failed.")
+                return redirect("home")
+
+            transaction_id = khalti_response.get("transaction_id") or pidx
+            amount_paid = str(khalti_response.get("total_amount", 0) / 100)  # paisa → Rs
+            reference_id = pidx
+        except (requests.exceptions.RequestException, json.JSONDecodeError):
+            messages.error(request, "Khalti verification error.")
+            return redirect("home")
+
+    else:
+        # Check for eSewa V1 parameters
+        oid = request.GET.get("oid")
+        amt = request.GET.get("amt")
+        refId_v1 = request.GET.get("refId")
+
+        if oid and amt and refId_v1:
+            payment_method = "eSewa"
+            transaction_id = oid
+            amount_paid = amt
+            reference_id = refId_v1
+
+            # Verify with eSewa V1 API
+            url = "https://uat.esewa.com.np/epay/transrec"
+            payload = {
+                "amt": amt,
+                "scd": "EPAYTEST",
+                "rid": refId_v1,
+                "pid": oid,
+            }
+
+            try:
+                response = requests.post(url, data=payload)
+                if "Success" not in response.text:
+                    messages.error(request, "eSewa payment verification failed.")
+                    return redirect("home")
+            except requests.exceptions.RequestException:
+                messages.error(request, "eSewa verification error.")
+                return redirect("home")
         else:
-            # Payment failed 
-            return render(request, "esewa/failure.html", {"oid": oid})
+            messages.error(request, "Missing payment parameters.")
+            return redirect("home")
 
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({"error": f"Verification failed: {e}"}, status=500)
+    # ---- Booking Details from Session ----
+    pending_booking = request.session.get("pending_booking")
+    ground = None
+    ground_name = "Unknown Ground"
+    ground_image = None
+    booking_date = "N/A"
+    booking_time = "N/A"
 
-def  payment_failure_view(request):  
-    
-    messages.error(request, "Payment failed! Please try again.")
-    return redirect('book_ground', ground_id=request.session.get('pending_booking', {}).get('ground_id'))
+    if pending_booking:
+        try:
+            ground = FutsalGround.objects.get(id=pending_booking["ground_id"])
+            ground_name = ground.groundName
+            ground_image = ground.image.url if ground.image else None
+            booking_date = pending_booking.get("date", "N/A")
+            booking_time = pending_booking.get("time", "N/A")
+            if booking_time != "N/A":
+                try:
+                    dt = datetime.strptime(booking_time, "%H:%M")
+                    booking_time = dt.strftime("%I:%M %p")
+                except ValueError:
+                    pass
+        except FutsalGround.DoesNotExist:
+            pass
+        # clear session
+        del request.session["pending_booking"]
+
+    context = {
+        "transaction_id": transaction_id,
+        "amount_paid": amount_paid,
+        "reference_id": reference_id,
+        "payment_done_through": payment_method,
+        "ground_name": ground_name,
+        "ground_image": ground_image,
+        "booking_date": booking_date,
+        "booking_time": booking_time,
+        "user_name": request.user.username if request.user.is_authenticated else "Guest",
+    }
+
+    # Store context in session and redirect to success page
+    request.session['payment_success_context'] = context
+    return redirect('payment_success_page')
+
+
+def payment_success_page_view(request):
+    context = request.session.get('payment_success_context', {})
+    if not context:
+        messages.error(request, "No payment information found.")
+        return redirect('home')
+    del request.session['payment_success_context']
+    return render(request, "booking/payment_success.html", context)
+
