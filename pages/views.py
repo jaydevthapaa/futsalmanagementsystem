@@ -7,8 +7,8 @@ from django.contrib.auth.models import User
 from .forms import SignupForm, FutsalGroundForm, UserEditForm
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal, ROUND_HALF_UP
-from datetime import datetime
-from .models import UserProfile, FutsalGround
+from datetime import datetime, timedelta
+from .models import UserProfile, FutsalGround, Booking, Notification
 # esewaa intergration
 import hmac, hashlib, base64,uuid
 
@@ -256,7 +256,6 @@ def user_delete_view(request, pk):
     return render(request, 'admin/user_confirm_delete.html', { 'user_obj': user_obj })
 
 @login_required
-
 # user ground view
 def user_grounds_view(request):
     # to see all avilable futsal grounds  
@@ -434,6 +433,7 @@ def verify_payment_view(request):
         ground_image = None
         booking_date = "N/A"
         booking_time = "N/A"
+        booking_obj = None
 
         if pending_booking:
             try:
@@ -442,6 +442,40 @@ def verify_payment_view(request):
                 ground_image = ground.image.url if ground.image else None
                 booking_date = pending_booking.get("date", "N/A")
                 booking_time = pending_booking.get("time", "N/A")
+
+                # Create Booking object
+                start_time = datetime.strptime(booking_time, "%H:%M").time()
+                end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=1)).time()
+                total_hours = Decimal("1.0")  # Assuming 1 hour booking
+                total_amount = ground.price_per_hour * total_hours
+
+                booking_obj = Booking.objects.create(
+                    user=request.user,
+                    ground=ground,
+                    booking_date=booking_date,
+                    start_time=start_time,
+                    end_time=end_time,
+                    total_hours=total_hours,
+                    total_amount=total_amount,
+                    status='pending'
+                )
+
+                # Create notification for user
+                Notification.objects.create(
+                    user=request.user,
+                    booking=booking_obj,
+                    message=f"Your booking for {ground.groundName} on {booking_date} at {booking_time} is pending confirmation."
+                )
+
+                # Create notification for admin
+                admin_users = User.objects.filter(is_staff=True)
+                for admin in admin_users:
+                    Notification.objects.create(
+                        user=admin,
+                        booking=booking_obj,
+                        message=f"New booking by {request.user.username} for {ground.groundName} on {booking_date} at {booking_time}. Payment: Khalti, Transaction ID: {transaction_id}"
+                    )
+
                 if booking_time != "N/A":
                     try:
                         dt = datetime.strptime(booking_time, "%H:%M")
@@ -515,44 +549,6 @@ def initiate_payment_view(request):
         return JsonResponse(new_response, status=400)  #actual error
 
 
-#esewa
-# def payment_success_view(request):
-    
-#     messages.success(request, "Payment successful! Your booking is confirmed.")
-#     return redirect('users_grounds') 
-#     oid = request.GET.get("oid")  
-#     amt = request.GET.get("amt")  
-#     refId = request.GET.get("refId")  
-#     if not all([oid, amt, refId]):
-#         return JsonResponse({"error": "Missing required parameters"}, status=400)
-
-#     # Verify with eSewa
-#     url = "https://uat.esewa.com.np/epay/transrec"  # sandbox verify URL
-#     payload = {
-#         "amt": amt,
-#         "scd": "EPAYTEST",   # merchant code (use your live code in production)
-#         "rid": refId,
-#         "pid": oid,
-#     }
-
-#     try:
-#         response = requests.post(url, data=payload)
-#         if "Success" in response.text:
-#             # Payment verified 
-#             return render(request, "esewa/success.html", {"oid": oid, "amt": amt, "refId": refId})
-#         else:
-#             # Payment failed 
-#             return render(request, "esewa/failure.html", {"oid": oid})
-
-#     except requests.exceptions.RequestException as e:
-#         return JsonResponse({"error": f"Verification failed: {e}"}, status=500)
-
-# def  payment_failure_view(request):  
-    
-#     messages.error(request, "Payment failed! Please try again.")
-#     return redirect('book_ground', ground_id=request.session.get('pending_booking', {}).get('ground_id'))
-
-
 # payment success view for both eSewa and Khalti
 def payment_successview(request):
     # eSewa V2 parameters
@@ -569,7 +565,7 @@ def payment_successview(request):
     amount_paid = None
     reference_id = None
 
-    # ---- eSewa V2 ----
+    # eSewa V2 
     if transaction_uuid and total_amount and refId:
         payment_method = "eSewa"
         transaction_id = transaction_uuid
@@ -595,7 +591,7 @@ def payment_successview(request):
             messages.error(request, "eSewa verification error.")
             return redirect("home")
 
-    # ---- Khalti ----
+    #Khalti 
     elif pidx:
         payment_method = "Khalti"
         url = "https://dev.khalti.com/api/v2/epayment/lookup/"
@@ -654,7 +650,7 @@ def payment_successview(request):
             messages.error(request, "Missing payment parameters.")
             return redirect("home")
 
-    # ---- Booking Details from Session ----
+    #  Booking Details from Session 
     pending_booking = request.session.get("pending_booking")
     ground = None
     ground_name = "Unknown Ground"
@@ -669,6 +665,40 @@ def payment_successview(request):
             ground_image = ground.image.url if ground.image else None
             booking_date = pending_booking.get("date", "N/A")
             booking_time = pending_booking.get("time", "N/A")
+
+            # Create Booking object
+            start_time = datetime.strptime(booking_time, "%H:%M").time()
+            end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=1)).time()
+            total_hours = Decimal("1.0")  #  1 hour booking
+            total_amount = ground.price_per_hour * total_hours
+
+            booking_obj = Booking.objects.create(
+                user=request.user,
+                ground=ground,
+                booking_date=booking_date,
+                start_time=start_time,
+                end_time=end_time,
+                total_hours=total_hours,
+                total_amount=total_amount,
+                status='pending'
+            )
+
+            # Create notification for user
+            Notification.objects.create(
+                user=request.user,
+                booking=booking_obj,
+                message=f"Your booking for {ground.groundName} on {booking_date} at {booking_time} is pending confirmation."
+            )
+
+            # Create notification for admin
+            admin_users = User.objects.filter(is_staff=True)
+            for admin in admin_users:
+                Notification.objects.create(
+                    user=admin,
+                    booking=booking_obj,
+                    message=f"New booking by {request.user.username} for {ground.groundName} on {booking_date} at {booking_time}. Payment: {payment_method}, Transaction ID: {transaction_id}"
+                )
+
             if booking_time != "N/A":
                 try:
                     dt = datetime.strptime(booking_time, "%H:%M")
@@ -705,3 +735,93 @@ def payment_success_page_view(request):
     del request.session['payment_success_context']
     return render(request, "booking/payment_success.html", context)
 
+
+# Notification Views
+@login_required
+def get_notifications_view(request):
+    """View to fetch notifications for logged-in user"""
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:10]
+    notifications_data = []
+
+    for notification in notifications:
+        notifications_data.append({
+            'id': notification.id,
+            'message': notification.message,
+            'status': notification.status,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'booking_id': notification.booking.id if notification.booking else None,
+            'booking_status': notification.booking.status if notification.booking else None,
+        })
+
+    return JsonResponse({'notifications': notifications_data})
+
+
+@login_required
+def mark_notification_read_view(request, notification_id):
+    
+    if request.method == 'POST':
+        try:
+            notification = Notification.objects.get(id=notification_id, user=request.user)
+            notification.status = 'read'
+            notification.save()
+            return JsonResponse({'success': True})
+        except Notification.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Notification not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+# Admin Booking Management Views
+@login_required
+def admin_bookings_view(request):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+
+    bookings = Booking.objects.all().order_by('-created_at')
+    return render(request, 'admin/bookings.html', {'bookings': bookings})
+
+
+@login_required
+def update_booking_status_view(request, booking_id):
+ 
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+
+    if request.method == 'POST':
+        try:
+            booking = Booking.objects.get(id=booking_id)
+            new_status = request.POST.get('status')
+
+            if new_status not in ['confirmed', 'cancelled', 'completed']:
+                return JsonResponse({'success': False, 'error': 'Invalid status'})
+
+            old_status = booking.status
+            booking.status = new_status
+            booking.save()
+
+          
+            status_messages = {
+                'confirmed': f"Your booking for {booking.ground.groundName} on {booking.booking_date} has been confirmed.",
+                'cancelled': f"Your booking for {booking.ground.groundName} on {booking.booking_date} has been cancelled.",
+                'completed': f"Your booking for {booking.ground.groundName} on {booking.booking_date} has been completed."
+            }
+
+            Notification.objects.create(
+                user=booking.user,
+                booking=booking,
+                message=status_messages[new_status]
+            )
+
+            return JsonResponse({'success': True, 'new_status': new_status})
+
+        except Booking.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Booking not found'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+def user_bookings_view(request):
+    """View for users to see their bookings"""
+    bookings = Booking.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'user/bookings.html', {'bookings': bookings})

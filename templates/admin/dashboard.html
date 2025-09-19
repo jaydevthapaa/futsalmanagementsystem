@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>Admin Dashboard</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+      
+      
+    </style>
 </head>
 <body>
     <div class="dash-container">
@@ -16,6 +20,23 @@
             <a class="nav-tab" href="{% url 'users_list' %}">View Users</a>
             <a class="nav-tab" href="{% url 'admin_profile' %}">Profile</a>
             <a class="nav-tab" href="{% url 'logout' %}">Logout</a>
+
+            <!-- Notification Icon -->
+            <div id="notification-container">
+                <span id="notification-count">0</span>
+                <span id="notification-icon">⚽</span>
+
+                <!-- Notification dropdown -->
+                <div id="notification-dropdown">
+                    <ul id="notification-list">
+                        {% for n in notifications %}
+                            <li>{{ n.message }}</li>
+                        {% empty %}
+                            <li>No notifications yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
 
         <!-- Dashboard Section -->
@@ -39,12 +60,44 @@
             <h3 style="margin-top:20px;">Recent Grounds</h3>
             <ul class="list">
                 {% for g in recent_grounds %}
-                <li><strong>{{ g.groundName }}</strong> — {{ g.location }} — Rs. {{ g.price_per_hour }}/hr</li>
+                    <li><strong>{{ g.groundName }}</strong> — {{ g.location }} — Rs. {{ g.price_per_hour }}/hr</li>
                 {% empty %}
-                <li>No grounds yet.</li>
+                    <li>No grounds yet.</li>
                 {% endfor %}
             </ul>
         </div>
     </div>
+
+    <script>
+document.addEventListener("DOMContentLoaded", function() {
+    const icon = document.getElementById("notification-icon");
+    const dropdown = document.getElementById("notification-dropdown");
+    const countEl = document.getElementById("notification-count");
+
+
+    icon.addEventListener("click", () => {
+        dropdown.style.display = (dropdown.style.display === "none" || dropdown.style.display === "") 
+            ? "block" 
+            : "none";
+    });
+
+    
+    document.addEventListener("click", (e) => {
+        if (!document.getElementById("notification-container").contains(e.target)) {
+            dropdown.style.display = "none";
+        }
+    });
+
+    // Show notification count 
+    const count = parseInt("{{ notifications|length|default:0 }}", 10);
+    if (count > 0) {
+        countEl.style.display = "inline-block";
+        countEl.innerText = count;
+    } else {
+        countEl.style.display = "none";
+    }
+});
+
+    </script>
 </body>
 </html>

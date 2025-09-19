@@ -24,6 +24,14 @@ from .views import (
     # payment_failure_view,
     payment_successview,
     payment_success_page_view,
+    # Notification views
+    get_notifications_view,
+    mark_notification_read_view,
+    # Admin booking management views
+    admin_bookings_view,
+    update_booking_status_view,
+    # User bookings view
+    user_bookings_view,
 )
 
 urlpatterns = [
@@ -65,4 +73,16 @@ urlpatterns = [
     path('esewa/success/', payment_successview, name='esewa_success'),
     path('khalti/success/', payment_successview, name='khalti_success'),
     path('payment/success/', payment_success_page_view, name='payment_success_page'),
-    ]
+
+    # Notification URLs
+    path('notifications/', get_notifications_view, name='get_notifications'),
+    path('notifications/<int:notification_id>/read/', mark_notification_read_view, name='mark_notification_read'),
+
+    # Admin booking management URLs
+    path('dashboard/bookings/', admin_bookings_view, name='admin_bookings'),
+    path('dashboard/bookings/<int:booking_id>/update-status/', update_booking_status_view, name='update_booking_status'),
+
+    # User bookings view
+    path('user/bookings/', user_bookings_view, name='user_bookings'),
+]
+ 

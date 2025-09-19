@@ -758,5 +758,81 @@ body {
                 display: block;
                 margin: 10px 0;
             }
+              #notification-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 20px;
         }
+        #notification-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            font-weight: bold;
+            display: none;
+        }
+        #notification-icon {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        #notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 30px;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        #notification-list {
+            list-style: none;
+            margin: 0;
+            padding: 10px;
+        }
+        #notification-list li {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        #notification-list li:last-child {
+            border-bottom: none;
+        }
+        .dash-container {
+            padding: 20px;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .nav-tab {
+            margin-right: 15px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .nav-tab.active {
+            color: green;
+        }
+        .dash-grid {
+            display: flex;
+            gap: 20px;
+        }
+        .dash-card {
+            flex: 1;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            background: #fafafa;
+        }
+        .list {
+            margin-top: 10px;
+        }
+    }
 }
+        

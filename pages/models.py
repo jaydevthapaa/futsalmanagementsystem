@@ -49,13 +49,31 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=10, blank=True)  #
     address = models.TextField(blank=True)
 
-    
+
     def __str__(self):
         return f"{self.user.username}'s Profile"
-    
+
     @property
     def full_name(self):
         first_name = self.user.first_name or ""
         last_name = self.user.last_name or ""
         full_name = f"{first_name} {last_name}".strip()
         return full_name if full_name else self.user.username
+
+class Notification(models.Model):
+    STATUS_CHOICES = [
+        ('unread', 'Unread'),
+        ('read', 'Read'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, null=True, blank=True)
+    message = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='unread')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.message[:50]}"
+
+    class Meta:
+        ordering = ['-created_at']
