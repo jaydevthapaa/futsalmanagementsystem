@@ -20,8 +20,6 @@ from .views import (
     book_ground_view,
     initiate_payment_view,
     verify_payment_view,
-    # payment_success_view,
-    # payment_failure_view,
     payment_successview,
     payment_success_page_view,
     # Notification views
@@ -32,6 +30,10 @@ from .views import (
     update_booking_status_view,
     # User bookings view
     user_bookings_view,
+    # Add these new admin notification views
+    get_admin_notifications_view,
+    mark_admin_notification_read_view,
+    get_notification_count_view,
 )
 
 urlpatterns = [
@@ -58,25 +60,26 @@ urlpatterns = [
     path('ground/<int:pk>/', grounds_detail_view, name='ground_detail'),
     path('grounds/', all_grounds_view, name='all_grounds'),
 
-    #booking url
+    # Booking url
     path('book/<int:ground_id>/', book_ground_view, name='book_ground'),
 
-    #khalti url
+    # Khalti url
     path('initiate', initiate_payment_view, name="initiate"),
-    path('verify', verify_payment_view,name='verify'),
+    path('verify', verify_payment_view, name='verify'),
     
-    # #esewa url
-    # path('esewa/success', payment_success_view, name='payment_success'),
-    # path('esewa/failure', payment_failure_view, name='payment_failure'),
-   
-    # payment Successfull url
+    # Payment Successful url
     path('esewa/success/', payment_successview, name='esewa_success'),
     path('khalti/success/', payment_successview, name='khalti_success'),
     path('payment/success/', payment_success_page_view, name='payment_success_page'),
 
-    # Notification URLs
+    # User Notification URLs
     path('notifications/', get_notifications_view, name='get_notifications'),
     path('notifications/<int:notification_id>/read/', mark_notification_read_view, name='mark_notification_read'),
+
+    # Admin Notification URLs (NEW)
+    path('admin/notifications/', get_admin_notifications_view, name='get_admin_notifications'),
+    path('admin/notifications/<int:notification_id>/mark-read/', mark_admin_notification_read_view, name='mark_admin_notification_read'),
+    path('api/notification-count/', get_notification_count_view, name='get_notification_count'),
 
     # Admin booking management URLs
     path('dashboard/bookings/', admin_bookings_view, name='admin_bookings'),
@@ -85,4 +88,3 @@ urlpatterns = [
     # User bookings view
     path('user/bookings/', user_bookings_view, name='user_bookings'),
 ]
- 

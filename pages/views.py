@@ -152,6 +152,15 @@ def admin_dashboard_view(request):
     total_grounds = FutsalGround.objects.count()
     recent_grounds = FutsalGround.objects.order_by('-created_at')[:5]  
     
+    # Get notifications for admin - FIX: Get base queryset first
+    notification_queryset = Notification.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Get unread count BEFORE slicing
+    unread_count = notification_queryset.filter(status='unread').count()
+    
+    # Now slice for recent notifications
+    notifications = notification_queryset[:10]
+    
     # Handle ground creation form
     if request.method == 'POST':
         form = FutsalGroundForm(request.POST, request.FILES)
@@ -171,8 +180,62 @@ def admin_dashboard_view(request):
         'admin_user': request.user,
         'form': form,
         'is_edit': False,
+        'notifications': notifications,
+        'unread_count': unread_count,
     }
     return render(request, 'admin/dashboard.html', context)
+
+@login_required
+def get_admin_notifications_view(request):
+    """API endpoint to fetch admin notifications"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
+    notifications_data = []
+
+    for notification in notifications:
+        notifications_data.append({
+            'id': notification.id,
+            'message': notification.message,
+            'status': notification.status,
+            'created_at': notification.created_at.isoformat(),
+            'booking_id': notification.booking.id if notification.booking else None,
+            'booking_status': notification.booking.status if notification.booking else None,
+        })
+
+    return JsonResponse({
+        'notifications': notifications_data,
+        'unread_count': notifications.filter(status='unread').count()
+    })
+
+
+@login_required
+def mark_admin_notification_read_view(request, notification_id):
+    """Mark admin notification as read"""
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+    
+    if request.method == 'POST':
+        try:
+            notification = Notification.objects.get(id=notification_id, user=request.user)
+            notification.status = 'read'
+            notification.save()
+            return JsonResponse({'success': True})
+        except Notification.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Notification not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+def get_notification_count_view(request):
+    """Get unread notification count"""
+    if request.user.is_staff:
+        count = Notification.objects.filter(user=request.user, status='unread').count()
+    else:
+        count = Notification.objects.filter(user=request.user, status='unread').count()
+    
+    return JsonResponse({'count': count})
     
 
 
@@ -576,7 +639,7 @@ def payment_successview(request):
         url = "https://rc-epay.esewa.com.np/api/epay/transaction"
         payload = {
             "amount": total_amount,
-            "product_code": "EPAYTEST",  # change in production
+            "product_code": "EPAYTEST", 
             "transaction_uuid": transaction_uuid,
             "reference_id": refId,
         }
