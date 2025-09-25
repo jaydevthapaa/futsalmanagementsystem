@@ -273,19 +273,19 @@
     <div class="dash-container">
         <!-- Navigation Tabs -->
         <div class="nav-tabs">
-            <a class="nav-tab active" href="{{ admin_dashboard }}">Dashboard</a>
-            <a class="nav-tab" href="{{ grounds_list }}">Manage Grounds</a>
-            <a class="nav-tab" href="{{ users_list }}">View Users</a>
-            <a class="nav-tab" href="{{ admin_bookings }}">Manage Bookings</a>
-            <a class="nav-tab" href="{{ admin_profile }}">Profile</a>
-            <a class="nav-tab" href="{{ logout }}">Logout</a>
+            <a class="nav-tab active" href="{{ 'admin_dashboard' }}">Dashboard</a>
+            <a class="nav-tab" href="{{ 'grounds_list' }}">Manage Grounds</a>
+            <a class="nav-tab" href="{{ 'users_list' }}">View Users</a>
+            <a class="nav-tab" href="{{ 'admin_bookings' }}">Manage Bookings</a>
+            <a class="nav-tab" href="{{ 'admin_profile' }}">Profile</a>
+            <a class="nav-tab" href="{{ 'logout' }}">Logout</a>
             
-            <!-- Notification Icon -->
+            <!-- notification icon -->
             <div id="notification-container">
                 <span id="notification-count" style="{% if unread_count > 0 %}display: flex;{% else %}display: none;{% endif %}">{{ unread_count }}</span>
                 <span id="notification-icon">⚽</span>
                 
-                <!-- Notification dropdown -->
+                    <!-- notification dropdown -->
                 <div id="notification-dropdown">
                     <ul id="notification-list">
                         <li class="loading">Loading notifications...</li>
@@ -294,7 +294,7 @@
             </div>
         </div>
 
-        <!-- Dashboard Section -->
+        <!-- dashboard Section -->
         <div id="dashboard" class="admin-section active">
             <h2>🏆 Admin Dashboard</h2>
             <div class="dash-grid">
@@ -335,7 +335,7 @@
         const countEl = document.getElementById("notification-count");
         const notificationList = document.getElementById("notification-list");
 
-        // Get CSRF token
+        // get csfr token
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -351,7 +351,7 @@
             return cookieValue;
         }
 
-        // Toggle dropdown visibility
+        // toggle dropdown visibility
         container.addEventListener("click", (e) => {
             e.stopPropagation();
             const isVisible = dropdown.style.display === "block";
@@ -362,14 +362,14 @@
             }
         });
 
-        // Close dropdown when clicking outside
+        // close dropdown when clicking outside
         document.addEventListener("click", (e) => {
             if (!container.contains(e.target)) {
                 dropdown.style.display = "none";
             }
         });
 
-        // Fetch notifications from Django API
+        // fetch notifaction from django api
         function fetchNotifications() {
             notificationList.innerHTML = '<li class="loading" style="padding: 15px; text-align: center; color: #666;">Loading notifications...</li>';
             
@@ -409,7 +409,7 @@
                 `;
             }).join('');
 
-            // Add click handlers for notifications
+            // add click handlers for notifications
             notificationList.querySelectorAll('li[data-notification-id]').forEach(item => {
                 item.addEventListener('click', () => {
                     const notificationId = item.dataset.notificationId;
@@ -418,7 +418,7 @@
                     }
                 });
 
-                // Add hover effect
+                // add hover effect
                 item.addEventListener('mouseenter', () => {
                     item.style.backgroundColor = '#f8f9fa';
                 });
@@ -428,7 +428,7 @@
             });
         }
 
-        // Update notification count
+        // update notification count
         function updateNotificationCount(count) {
             if (count > 0) {
                 countEl.style.display = "flex";
@@ -438,7 +438,7 @@
             }
         }
 
-        // Mark notification as read
+        // mark notificairon as read
         function markAsRead(notificationId, element) {
             fetch(`/admin/notifications/${notificationId}/mark-read/`, {
                 method: 'POST',
@@ -462,7 +462,7 @@
             });
         }
 
-        // Helper function to get time ago
+        // helper functon to get time ago
         function getTimeAgo(date) {
             const now = new Date();
             const diffMs = now - date;

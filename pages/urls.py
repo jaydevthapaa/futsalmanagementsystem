@@ -53,17 +53,17 @@ urlpatterns = [
 
     # Admin dashboard & management
     path('dashboard/', admin_dashboard_view, name='admin_dashboard'),
-    path('dashboard/grounds/', grounds_list_view, name='grounds_list'),
+    path('dashboard/grounds_list/', grounds_list_view, name='grounds_list'),
     path('dashboard/grounds/new/', grounds_create_view, name='grounds_create'),
     path('dashboard/grounds/<int:pk>/edit/', grounds_edit_view, name='grounds_edit'),
     path('dashboard/grounds/<int:pk>/delete/', grounds_delete_view, name='grounds_delete'),
-    path('dashboard/users/', users_list_view, name='users_list'),
-    path('dashboard/profile/', admin_profile_view, name='admin_profile'),
+    path('dashboard/users_list/', users_list_view, name='users_list'),
+    path('dashboard/admin_profile/', admin_profile_view, name='admin_profile'),
     path('dashboard/users/<int:pk>/edit/', user_edit_view, name='user_edit'),
     path('dashboard/users/<int:pk>/delete/', user_delete_view, name='user_delete'),
 
     # Admin booking management
-    path('dashboard/bookings/', admin_bookings_view, name='admin_bookings'),
+    path('dashboard/admin_bookings/', admin_bookings_view, name='admin_bookings'),
     path('dashboard/bookings/<int:booking_id>/', admin_booking_detail_view, name='admin_booking_detail'),
     path('dashboard/bookings/<int:booking_id>/update-status/', update_booking_status_view, name='update_booking_status'),
 

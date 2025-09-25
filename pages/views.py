@@ -918,7 +918,7 @@ def admin_bookings_view(request):
         return redirect('home')
 
     bookings = Booking.objects.all().order_by('-created_at')
-    return render(request, 'admin/bookings.html', {'bookings': bookings})
+    return render(request, 'admin/my_bookings.html', {'bookings': bookings})
 
 
 @login_required
