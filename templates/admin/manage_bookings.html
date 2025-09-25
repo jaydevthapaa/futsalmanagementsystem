@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+        }
+
+        .nav-link {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: transform 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .filters {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .bookings-table {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-completed {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirm {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: #218838;
+        }
+
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #c82333;
+        }
+
+        .btn-complete {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-complete:hover {
+            background: #0056b3;
+        }
+
+        .btn-disabled {
+            background: #6c757d;
+            color: white;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .bookings-table {
+                padding: 15px;
+            }
+            
+            table {
+                font-size: 0.9em;
+            }
+            
+            th, td {
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Manage Bookings</h1>
+            <a href="{% url 'admin_dashboard' %}" class="nav-link">Back to Dashboard</a>
+        </div>
+
+        <div class="filters">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-status="all">All Bookings</button>
+                <button class="filter-btn" data-status="pending">Pending</button>
+                <button class="filter-btn" data-status="confirmed">Confirmed</button>
+                <button class="filter-btn" data-status="cancelled">Cancelled</button>
+                <button class="filter-btn" data-status="completed">Completed</button>
+            </div>
+        </div>
+
+        <div class="bookings-table">
+            <table id="bookings-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Ground</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Booked On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="bookings-tbody">
+                    {% for booking in bookings %}
+                        <tr data-status="{{ booking.status }}" data-booking-id="{{ booking.id }}">
+                            <td>{{ booking.user.username }}</td>
+                            <td>
+                                <strong>{{ booking.ground.groundName }}</strong><br>
+                                <small style="color: #666;">{{ booking.ground.location }}</small>
+                            </td>
+                            <td>{{ booking.booking_date|date:"M d, Y" }}</td>
+                            <td>{{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}</td>
+                            <td>Rs. {{ booking.total_amount }}</td>
+                            <td>
+                                <span class="status-badge status-{{ booking.status }}">{{ booking.status }}</span>
+                            </td>
+                            <td>{{ booking.created_at|date:"M d, g:i A" }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    {% if booking.status == 'pending' %}
+                                        <button class="btn btn-confirm"
+                                             data-id="{{ booking.id }}"
+                                             data-status="confirmed"
+                                             onclick="updateBookingStatus(this.dataset.id, this.dataset.status)">
+                                             Confirm
+                                        </button>
+
+                                        <button class="btn btn-cancel"
+                                            data-id="{{ booking.id }}"
+                                            data-status="cancelled"
+                                            onclick="updateBookingStatus(this.dataset.id, this.dataset.status)">
+                                            Cancel
+                                        </button>
+
+                                    {% elif booking.status == 'confirmed' %}
+                                        <button class="btn btn-complete"
+        data-id="{{ booking.id }}"
+        data-status="completed"
+        onclick="updateBookingStatus(this.dataset.id, this.dataset.status)">
+    Complete
+</button>
+
+                                        <button class="btn btn-cancel"
+        data-id="{{ booking.id }}"
+        data-status="cancelled"
+        onclick="updateBookingStatus(this.dataset.id, this.dataset.status)">
+    Cancel
+</button>
+
+
+                                    {% else %}
+                                        <span class="btn btn-disabled">No Actions</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="empty-state">
+                                No bookings found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+<script>
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Filter bookings by status
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const status = this.dataset.status;
+            const rows = document.querySelectorAll('#bookings-tbody tr');
+            
+            rows.forEach(row => {
+                if (status === 'all' || row.dataset.status === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Update booking status
+    function updateBookingStatus(bookingId, newStatus) {
+        const confirmation = confirm(`Are you sure you want to ${newStatus} this booking?`);
+        if (!confirmation) return;
+
+        const formData = new FormData();
+        formData.append('status', newStatus);
+
+        fetch(`/admin/bookings/${bookingId}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to update booking status");
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert(`Booking status updated to "${newStatus}"`);
+
+                // Update row UI
+                const row = document.querySelector(`#booking-row-${bookingId}`);
+                if (row) {
+                    row.dataset.status = newStatus;
+                    const statusCell = row.querySelector('.status-cell');
+                    if (statusCell) {
+                        statusCell.textContent = newStatus;
+                    }
+                }
+            } else {
+                alert(data.message || "Something went wrong");
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            alert("Error updating booking status");
+        });
+    }
+</script>

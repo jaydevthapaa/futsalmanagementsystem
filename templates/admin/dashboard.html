@@ -273,12 +273,12 @@
     <div class="dash-container">
         <!-- Navigation Tabs -->
         <div class="nav-tabs">
-            <a class="nav-tab active" href="{% url 'admin_dashboard' %}">Dashboard</a>
-            <a class="nav-tab" href="{% url 'grounds_list' %}">Manage Grounds</a>
-            <a class="nav-tab" href="{% url 'users_list' %}">View Users</a>
-            <a class="nav-tab" href="{% url 'admin_bookings' %}">Manage Bookings</a>
-            <a class="nav-tab" href="{% url 'admin_profile' %}">Profile</a>
-            <a class="nav-tab" href="{% url 'logout' %}">Logout</a>
+            <a class="nav-tab active" href="{{ admin_dashboard }}">Dashboard</a>
+            <a class="nav-tab" href="{{ grounds_list }}">Manage Grounds</a>
+            <a class="nav-tab" href="{{ users_list }}">View Users</a>
+            <a class="nav-tab" href="{{ admin_bookings }}">Manage Bookings</a>
+            <a class="nav-tab" href="{{ admin_profile }}">Profile</a>
+            <a class="nav-tab" href="{{ logout }}">Logout</a>
             
             <!-- Notification Icon -->
             <div id="notification-container">
@@ -298,19 +298,19 @@
         <div id="dashboard" class="admin-section active">
             <h2>🏆 Admin Dashboard</h2>
             <div class="dash-grid">
-                <div class="dash-card">
+                <div class="dash-card" onclick="window.location.href='{{ users_list }}'">
                     <h3>👥 Total Users</h3>
                     <div>{{ total_users }}</div>
                 </div>
-                <div class="dash-card">
-                    <h3>⚽ Total Grounds</h3>
-                    <div>{{ total_grounds }}</div>
+                 <div class="dash-card" onclick="window.location.href='{{ grounds_list_url }}'">
+                      <h3>⚽ Total Grounds</h3>
+                      <div>{{ total_grounds }}</div>
                 </div>
-                <div class="dash-card">
+                <div class="dash-card" onclick="window.location.href='{{ admin_bookings }}'">
                     <h3>📅 Total Bookings</h3>
                     <div>{{ total_bookings|default:0 }}</div>
                 </div>
-                <div class="dash-card">
+                <div class="dash-card" onclick="window.location.href='{{ grounds_list_url }}'">
                     <h3>📊 Recent Grounds</h3>
                     <div>{{ recent_grounds|length }}</div>
                 </div>

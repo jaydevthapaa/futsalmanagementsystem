@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timedelta
 from .models import UserProfile, FutsalGround, Booking, Notification
+from django.urls import reverse
 # esewaa intergration
 import hmac, hashlib, base64,uuid
 
@@ -117,7 +118,15 @@ def grounds_list_view(request):
         return redirect('home')
     
     grounds = FutsalGround.objects.all().order_by('-created_at')
-    return render(request, 'admin/grounds_list.html', {'grounds': grounds})
+    total_grounds = grounds.count()  
+    
+    context = {
+        'grounds': grounds,  
+        'total_grounds': total_grounds,
+        'grounds_list_url': reverse('grounds_list')
+    }
+    
+    return render(request, 'admin/grounds_list.html', context)
 
 
 
@@ -151,14 +160,14 @@ def admin_dashboard_view(request):
     total_users = User.objects.count()
     total_grounds = FutsalGround.objects.count()
     recent_grounds = FutsalGround.objects.order_by('-created_at')[:5]  
+    total_bookings = Booking.objects.count()
     
-    # Get notifications for admin - FIX: Get base queryset first
+    # Recent bookings that need attention
+    pending_bookings = Booking.objects.filter(status='pending').order_by('-created_at')[:5]
+
+    # notifications for admin - 
     notification_queryset = Notification.objects.filter(user=request.user).order_by('-created_at')
-    
-    # Get unread count BEFORE slicing
     unread_count = notification_queryset.filter(status='unread').count()
-    
-    # Now slice for recent notifications
     notifications = notification_queryset[:10]
     
     # Handle ground creation form
@@ -167,7 +176,7 @@ def admin_dashboard_view(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Ground created successfully.')
-            return redirect('admin_dashboard')  # Stay on dashboard
+            return redirect('admin_dashboard')  
         else:
             messages.error(request, 'Please correct the errors in the ground form.')
     else:
@@ -177,17 +186,22 @@ def admin_dashboard_view(request):
         'total_users': total_users,
         'total_grounds': total_grounds,
         'recent_grounds': recent_grounds,
+        'total_bookings': total_bookings,
+        'pending_bookings': pending_bookings,
         'admin_user': request.user,
         'form': form,
         'is_edit': False,
         'notifications': notifications,
         'unread_count': unread_count,
+        'grounds_list_url': reverse('grounds_list'), 
+        'users_list_url': reverse('users_list'),
     }
+    
     return render(request, 'admin/dashboard.html', context)
 
 @login_required
+
 def get_admin_notifications_view(request):
-    """API endpoint to fetch admin notifications"""
     if not request.user.is_staff:
         return JsonResponse({'error': 'Permission denied'}, status=403)
     
@@ -212,7 +226,7 @@ def get_admin_notifications_view(request):
 
 @login_required
 def mark_admin_notification_read_view(request, notification_id):
-    """Mark admin notification as read"""
+    
     if not request.user.is_staff:
         return JsonResponse({'success': False, 'error': 'Permission denied'})
     
@@ -229,7 +243,7 @@ def mark_admin_notification_read_view(request, notification_id):
 
 @login_required
 def get_notification_count_view(request):
-    """Get unread notification count"""
+    
     if request.user.is_staff:
         count = Notification.objects.filter(user=request.user, status='unread').count()
     else:
@@ -275,7 +289,15 @@ def users_list_view(request):
         messages.error(request, "You do not have permission to access this page.")
         return redirect('home')
     users = User.objects.all().order_by('username')
-    return render(request, 'admin/users_list.html', { 'users': users })
+    total_users = users.count()  # Calculat total users
+    
+    context = {
+        'users': users,  
+        'total_users': total_users,
+        'users_list_url': reverse('users_list'), 
+    }
+    
+    return render(request, 'admin/users_list.html', context)
 
 
 @login_required
@@ -489,7 +511,7 @@ def verify_payment_view(request):
         amount_paid = str(khalti_response.get("total_amount", 0) / 100)  # paisa → Rs
         reference_id = pidx
 
-        # ---- Booking Details from Session ----
+        # Booking Details from Session 
         pending_booking = request.session.get("pending_booking")
         ground = None
         ground_name = "Unknown Ground"
@@ -802,7 +824,7 @@ def payment_success_page_view(request):
 # Notification Views
 @login_required
 def get_notifications_view(request):
-    """View to fetch notifications for logged-in user"""
+    # View to fetch notifications for logged-in user
     notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:10]
     notifications_data = []
 
@@ -831,6 +853,61 @@ def mark_notification_read_view(request, notification_id):
         except Notification.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Notification not found'})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+# cancle ground view
+@login_required
+def cancel_booking_view(request, booking_id):
+    try:
+        booking = Booking.objects.get(id=booking_id, user=request.user)
+        
+        # Only allow cancellation if booking is pending or confirmed
+        if booking.status not in ['pending', 'confirmed']:
+            messages.error(request, "This booking cannot be cancelled.")
+            return redirect('user_bookings')
+        
+        if request.method == 'POST':
+            booking.status = 'cancelled'
+            booking.save()
+            
+            # Create notification for user
+            Notification.objects.create(
+                user=request.user,
+                booking=booking,
+                message=f"You cancelled your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')}."
+            )
+            
+            # Create notification for admin
+            admin_users = User.objects.filter(is_staff=True)
+            for admin in admin_users:
+                Notification.objects.create(
+                    user=admin,
+                    booking=booking,
+                    message=f"Booking cancelled by {request.user.username} for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')}."
+                )
+            
+            messages.success(request, "Booking cancelled successfully.")
+            return redirect('user_bookings')
+        
+        return render(request, 'user/cancel_booking.html', {'booking': booking})
+        
+    except Booking.DoesNotExist:
+        messages.error(request, "Booking not found.")
+        return redirect('user_bookings')
+
+
+@login_required
+def admin_booking_detail_view(request, booking_id):
+   
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        return render(request, 'admin/booking_detail.html', {'booking': booking})
+    except Booking.DoesNotExist:
+        messages.error(request, "Booking not found.")
+        return redirect('admin_bookings')
+
 
 
 # Admin Booking Management Views
@@ -885,6 +962,6 @@ def update_booking_status_view(request, booking_id):
 
 @login_required
 def user_bookings_view(request):
-    """View for users to see their bookings"""
+    # View for users to see their bookings
     bookings = Booking.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'user/bookings.html', {'bookings': bookings})

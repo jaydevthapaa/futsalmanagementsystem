@@ -11,21 +11,21 @@
     <div class="container">
         <div class="header">
             <div>
-                <a href="{% url 'users_grounds' %}" class="nav-link">← Back to Grounds</a>
-                <a href="{% url 'home' %}" class="nav-link">Home</a>
+                <a href="{{ 'user_grounds' }}" class="nav-link">← Back to Grounds</a>
+                <a href="{{ 'home' }}" class="nav-link">Home</a>
             </div>
         </div>
 
         <div class="ground-card">
             {% if ground.image %}
-                <img src="{{ ground.image.url }}" alt="{{ ground.groundName }}" class="ground-image">
+                <img src="{{ 'ground.image.url' }}" alt="{{ 'ground.groundName' }}" class="ground-image">
             {% endif %}
 
             <h1 class="ground-name">{{ ground.groundName }}</h1>
 
             <div class="booking-info">
                 <h3>Ground Information</h3>
-                <p><strong>Location:</strong> 📌 {{ ground.location }}</p>
+                <p><strong>Location:</strong> 📌 {{ 'ground.location' }}</p>
                 <p><strong>Price:</strong> <span class="price">Rs. {{ ground.price_per_hour }}/hour</span></p>
                 {% if ground.contact_number %}
                     <p><strong>Contact:</strong> 📞 {{ ground.contact_number }}</p>
@@ -34,8 +34,8 @@
             </div>
 
             <div class="booking-actions">
-                <a href="{% url 'book_ground' ground.id %}" class="book-btn">📅 Book Now</a>
-                <a href="{% url 'users_grounds' %}" class="back-btn">← Back to Grounds</a>
+                <a href="{{ 'book_ground' }}" class="book-btn">📅 Book Now</a>
+                <a href="{{ 'user_grounds' }}" class="back-btn">← Back to Grounds</a>
             </div>
         </div>
 
