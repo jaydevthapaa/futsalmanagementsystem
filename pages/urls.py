@@ -23,6 +23,7 @@ from .views import (
     book_ground_view,
     user_bookings_view,
     cancel_booking_view,
+    confirm_booking_view,
     
     # payments
     initiate_payment_view,
@@ -73,8 +74,10 @@ urlpatterns = [
     path('grounds/', all_grounds_view, name='all_grounds'),
     # Booking 
     path('book/<int:ground_id>/', book_ground_view, name='book_ground'),
+
     path('bookings/', user_bookings_view, name='user_bookings'),
     path('bookings/cancel/<int:booking_id>/', cancel_booking_view, name='cancel_booking'),
+    path('booking/confirm/<int:booking_id>/', confirm_booking_view, name='confirm_booking'),
 
     # Payments
     path('esewa/success/', payment_successview, name='esewa_success'),

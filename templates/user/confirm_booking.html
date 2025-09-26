@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Booking - FutsalThings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #d95812 0%, #19d765 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirm-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .confirm-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .confirm-icon {
+            width: 80px;
+            height: 80px;
+            background: #28a745;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            color: white;
+        }
+
+        .confirm-title {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .confirm-subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .booking-summary {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .summary-value {
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .ground-name {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .status-badge {
+            background: #fff3cd;
+            color: #856404;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: linear-gradient(135deg, #218838, #1ba085);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .warning-text {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .confirm-container {
+                padding: 25px;
+                margin: 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="confirm-container">
+        <div class="confirm-header">
+            <div class="confirm-icon">✓</div>
+            <h1 class="confirm-title">Confirm Booking</h1>
+            <p class="confirm-subtitle">Please review your booking details before confirming</p>
+        </div>
+
+        <div class="booking-summary">
+            <div class="summary-item">
+                <span class="summary-label">Ground</span>
+                <span class="summary-value ground-name">{{ booking.ground.groundName }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Location</span>
+                <span class="summary-value">{{ booking.ground.location }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Date</span>
+                <span class="summary-value">{{ booking.booking_date|date:"M d, Y" }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Time</span>
+                <span class="summary-value">{{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Duration</span>
+                <span class="summary-value">{{ booking.total_hours }} hour{{ booking.total_hours|floatformat:"0"|add:"0"|length|add:"-1"|slice:":1"|yesno:"s," }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Total Amount</span>
+                <span class="summary-value">Rs. {{ booking.total_amount }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Current Status</span>
+                <span class="summary-value">
+                    <span class="status-badge">{{ booking.status }}</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="warning-text">
+            <strong>Note:</strong> Once you confirm this booking, it will be marked as confirmed and the ground will be reserved for you at the specified time.
+        </div>
+
+        <form method="post" class="action-buttons">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-confirm">
+                Confirm Booking
+            </button>
+            <a href="{% url 'user_bookings' %}" class="btn btn-cancel">
+                Go Back
+            </a>
+        </form>
+    </div>
+</body>
+</html>

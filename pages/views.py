@@ -853,6 +853,44 @@ def mark_notification_read_view(request, notification_id):
         except Notification.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Notification not found'})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def confirm_booking_view(request, booking_id):
+    try:
+        booking = Booking.objects.get(id=booking_id, user=request.user)
+        
+        # Only allow confirmation if booking is pending
+        if booking.status != 'pending':
+            messages.error(request, "This booking cannot be confirmed.")
+            return redirect('user_bookings')
+        
+        if request.method == 'POST':
+            booking.status = 'confirmed'
+            booking.save()
+            
+            # Create notification for user
+            Notification.objects.create(
+                user=request.user,
+                booking=booking,
+                message=f"You confirmed your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')}."
+            )
+            
+            # Create notification for admin
+            admin_users = User.objects.filter(is_staff=True)
+            for admin in admin_users:
+                Notification.objects.create(
+                    user=admin,
+                    booking=booking,
+                    message=f"Booking confirmed by {request.user.username} for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')}."
+                )
+            
+            messages.success(request, "Booking confirmed successfully.")
+            return redirect('user_bookings')
+        
+        return render(request, 'user/confirm_booking.html', {'booking': booking})
+    except Booking.DoesNotExist:
+        messages.error(request, "Booking not found.")
+        return redirect('user_bookings')
 # cancle ground view
 @login_required
 def cancel_booking_view(request, booking_id):

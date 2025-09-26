@@ -171,6 +171,16 @@
             transform: translateY(-2px);
         }
 
+        .btn-confirm {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
         .btn-disabled {
             background: #6c757d;
             color: white;
@@ -287,14 +297,25 @@
                     </div>
                     
                     <div class="booking-actions">
-                        {% if booking.status == 'pending' or booking.status == 'confirmed' %}
+                        {% if booking.status == 'pending' %}
+                            <a href="{% url 'confirm_booking' booking.id %}" 
+                               class="btn btn-confirm"
+                               onclick="return confirm('Are you sure you want to confirm this booking?')">
+                                Confirm Booking
+                            </a>
+                            <a href="{% url 'cancel_booking' booking.id %}" 
+                               class="btn btn-cancel"
+                               onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                Cancel Booking
+                            </a>
+                        {% elif booking.status == 'confirmed' %}
                             <a href="{% url 'cancel_booking' booking.id %}" 
                                class="btn btn-cancel"
                                onclick="return confirm('Are you sure you want to cancel this booking?')">
                                 Cancel Booking
                             </a>
                         {% else %}
-                            <span class="btn btn-disabled">Cannot Cancel</span>
+                            <span class="btn btn-disabled">No Actions Available</span>
                         {% endif %}
                     </div>
                 </div>
@@ -308,4 +329,4 @@
         </div>
     </div>
 </body>
-</html>
+</html> 

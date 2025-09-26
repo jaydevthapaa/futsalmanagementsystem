@@ -12,9 +12,9 @@
         <div class="ground-card">
             <h1>Available Futsal Grounds</h1>
             <div class="booking-actions">
-                <a href="{% url 'home' %}" class="btn">← Back to Home</a>
+                <a href="{% url 'home' %}" class="btn btn-secondary">← Back to Home</a>
                 {% if user.is_staff %}
-                    <a href="{% url 'admin_dashboard' %}" class="btn">Admin Dashboard</a>
+                    <a href="{% url 'admin_dashboard' %}" class="btn btn-primary">Admin Dashboard</a>
                 {% endif %}
             </div>
         </div>
@@ -27,8 +27,8 @@
                            value="{{ location_filter }}">
                 </div>
                 <div class="booking-actions">
-                    <button type="submit" class="btn">Search</button>
-                    <a href="{% url 'users_grounds' %}" class="btn btn-secondary">Clear</a>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a href="{% url 'user_grounds' %}" class="btn btn-secondary">Clear</a>
                 </div>
             </form>
         </div>

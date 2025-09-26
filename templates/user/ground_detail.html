@@ -6,36 +6,170 @@
     <title>JustFutsal Things ⚽</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #8BC34A 0%, #4CAF50 100%);
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .nav-link {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .ground-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .ground-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .ground-name {
+            color: #2E7D32;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .booking-info {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #4CAF50;
+            margin-bottom: 25px;
+        }
+
+        .booking-info h3 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .booking-info p {
+            margin-bottom: 12px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .price {
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .booking-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .book-btn, .back-btn {
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .book-btn {
+            background: linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%);
+            color: white;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #78909C 0%, #607D8B 100%);
+            color: white;
+        }
+
+        .book-btn:hover, .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .ground-description {
+            line-height: 1.6;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        .ground-card h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <a href="{{ 'user_grounds' }}" class="nav-link">← Back to Grounds</a>
-                <a href="{{ 'home' }}" class="nav-link">Home</a>
+                <a href="{% url 'user_grounds' %}" class="nav-link">← Back to Grounds</a>
+                <a href="{% url 'home' %}" class="nav-link">Home</a>
             </div>
         </div>
 
         <div class="ground-card">
             {% if ground.image %}
-                <img src="{{ 'ground.image.url' }}" alt="{{ 'ground.groundName' }}" class="ground-image">
+                <img src="{{ ground.image.url }}" alt="{{ ground.groundName }}" class="ground-image">
             {% endif %}
 
             <h1 class="ground-name">{{ ground.groundName }}</h1>
 
             <div class="booking-info">
                 <h3>Ground Information</h3>
-                <p><strong>Location:</strong> 📌 {{ 'ground.location' }}</p>
+                <p><strong>Groundname:</strong>{{ ground.groundName }}</p>
+                <p><strong>Location:</strong> 📌 {{ ground.location }}</p>
                 <p><strong>Price:</strong> <span class="price">Rs. {{ ground.price_per_hour }}/hour</span></p>
-                {% if ground.contact_number %}
-                    <p><strong>Contact:</strong> 📞 {{ ground.contact_number }}</p>
+                {% if ground.phone_number %}
+                    <p><strong>Contact:</strong> 📞 {{ ground.phone_number }}</p>
                 {% endif %}
                 <p><strong>Added:</strong> {{ ground.created_at|date:"F d, Y" }}</p>
             </div>
 
             <div class="booking-actions">
-                <a href="{{ 'book_ground' }}" class="book-btn">📅 Book Now</a>
-                <a href="{{ 'user_grounds' }}" class="back-btn">← Back to Grounds</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'book_ground' ground.id %}" class="book-btn">📅 Book Now</a>
+                {% else %}
+                    <a href="{% url 'signin' %}" class="book-btn">Sign in to Book</a>
+                {% endif %}
+                <a href="{% url 'user_grounds' %}" class="back-btn">← Back to Grounds</a>
             </div>
         </div>
 
@@ -48,4 +182,3 @@
     </div>
 </body>
 </html>
-

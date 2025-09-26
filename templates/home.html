@@ -15,7 +15,7 @@
             <ul class="list-content">
                 <li><a href="{{ 'about' }}" class="link-clean">About</a></li>
                 {% if user.is_authenticated %}
-                    <li><a href="{{ 'users_grounds' }}" class="link-clean">Browse Grounds</a></li>
+                    <li><a href="{% url 'user_grounds' %}" class=link-clean">Browse Grounds</a></li>
                     {% if user.is_staff %}
                         <li><a href="{{ 'admin_dashboard' }}" class="link-clean">Admin Dashboard</a></li>
                     {% endif %}
@@ -45,7 +45,7 @@
             <h1>Welcome to JustFutsalThings ⚽</h1>
             <p>Book futsal grounds near you with exclusive offers!</p>
             {% if user.is_authenticated %}
-                <a href="{{ 'user_grounds' }}" class="cta-button">Browse Grounds</a>
+                <a href="{% url 'user_grounds' %}" class="cta-button">Browse Grounds</a>
             {% else %}
                 <a href="{{ 'signup' }}" class="cta-button">Get Started</a>
             {% endif %}
@@ -76,14 +76,15 @@
                             {% endif %}
                             <div class="booking-actions">
                                 <a href="{% url 'ground_detail' ground.pk %}" class="btn">View Details</a>
-                                <a href="{% url 'book_ground' ground.id %}" class="book-btn">📅 Book Now</a>
+                                 <a href="{% url 'book_ground' ground.id %}" class="book-btn">📅 Book Now</a>
+
                             </div>
                         </div>
                     {% endfor %}
                 </div>
                 
                 <div class="text-center mt-20">
-                    <a href="{{  'user_grounds' }}" class="btn">View All Grounds</a>
+                    <a href="{% url 'user_grounds' %}" class="btn">View All Grounds</a>
                 </div>
             {% else %}
                 <div class="ground-card text-center">
