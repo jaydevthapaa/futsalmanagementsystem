@@ -22,7 +22,11 @@
                     <li><span class="welcome-user">Welcome, {{ user.username }}!</span></li>
                     <li><a href="{{ 'logout' }}" class="link-clean">Logout</a></li>
                 {% else %}
-                    <li><a href="{{ 'all_grounds' }}" class="link-clean">Browse Grounds</a></li>
+                    {% if request.user.is_authenticated %}
+                         <li><a href="{% url 'user_grounds' %}" class="link-clean">Browse Grounds</a></li>
+                        {% else %}
+                          <li><a href="{% url 'signup' %}" class="link-clean">Browse Ground</a></li>
+                        {% endif %}
                     <li><a href="{{ 'signin' }}" class="link-clean">Login</a></li>
                     <li><a href="{{ 'signup' }}" class="link-clean">Sign Up</a></li>
                 {% endif %}
