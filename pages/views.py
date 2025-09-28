@@ -200,28 +200,25 @@ def admin_dashboard_view(request):
     return render(request, 'admin/dashboard.html', context)
 
 @login_required
-
 def get_admin_notifications_view(request):
-    if not request.user.is_staff:
-        return JsonResponse({'error': 'Permission denied'}, status=403)
-    
-    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
-    notifications_data = []
+    print(f"Logged in user: {request.user.username}")
 
-    for notification in notifications:
-        notifications_data.append({
-            'id': notification.id,
-            'message': notification.message,
-            'status': notification.status,
-            'created_at': notification.created_at.isoformat(),
-            'booking_id': notification.booking.id if notification.booking else None,
-            'booking_status': notification.booking.status if notification.booking else None,
-        })
+    all_notifications = Notification.objects.all().order_by('-created_at')
+    print(f"All notifications: {all_notifications}")
 
-    return JsonResponse({
-        'notifications': notifications_data,
-        'unread_count': notifications.filter(status='unread').count()
-    })
+    user_notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    print(f"User notifications: {user_notifications}")
+
+    unread_count = user_notifications.filter(status="unread").count()
+    print(f"Unread count: {unread_count}")
+
+    context = {
+        'notifications': user_notifications,
+        'unread_count': unread_count,
+    }
+
+    return render(request, 'admin/notifications.html', context)
+
 
 
 @login_required
@@ -854,43 +851,72 @@ def mark_notification_read_view(request, notification_id):
             return JsonResponse({'success': False, 'error': 'Notification not found'})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
+
 @login_required
-def confirm_booking_view(request, booking_id):
+def admin_confirm_booking(request, booking_id):
+    """Admin view to confirm a booking - similar to user confirm but for admin"""
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('home')
+    
     try:
-        booking = Booking.objects.get(id=booking_id, user=request.user)
+        booking = Booking.objects.get(id=booking_id)
         
         # Only allow confirmation if booking is pending
         if booking.status != 'pending':
             messages.error(request, "This booking cannot be confirmed.")
-            return redirect('user_bookings')
+            return redirect('admin_bookings')
         
         if request.method == 'POST':
-            booking.status = 'confirmed'
-            booking.save()
+            action = request.POST.get('action')
             
-            # Create notification for user
-            Notification.objects.create(
-                user=request.user,
-                booking=booking,
-                message=f"You confirmed your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')}."
-            )
-            
-            # Create notification for admin
-            admin_users = User.objects.filter(is_staff=True)
-            for admin in admin_users:
+            if action == 'confirm':
+                booking.status = 'confirmed'
+                booking.save()
+                
+                # Create notification for user
                 Notification.objects.create(
-                    user=admin,
+                    user=booking.user,
                     booking=booking,
-                    message=f"Booking confirmed by {request.user.username} for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')}."
+                    message=f"Your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')} has been confirmed by admin."
                 )
+                
+                # Create notification for admin
+                Notification.objects.create(
+                    user=request.user,
+                    booking=booking,
+                    message=f"You confirmed booking by {booking.user.username} for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')}."
+                )
+                
+                messages.success(request, "Booking confirmed successfully.")
+                return redirect('admin_bookings')
             
-            messages.success(request, "Booking confirmed successfully.")
-            return redirect('user_bookings')
+            elif action == 'cancel':
+                booking.status = 'cancelled'
+                booking.save()
+                
+                # Create notification for user about cancellation and refund
+                Notification.objects.create(
+                    user=booking.user,
+                    booking=booking,
+                    message=f"Your booking for {booking.ground.groundName} on {booking.booking_date} has been cancelled by admin. Your advance payment will be refunded within 3-5 business days."
+                )
+                
+                # Create notification for admin
+                Notification.objects.create(
+                    user=request.user,
+                    booking=booking,
+                    message=f"You cancelled booking by {booking.user.username} for {booking.ground.groundName}. Refund process initiated."
+                )
+                
+                messages.success(request, "Booking cancelled successfully. User has been notified about the refund.")
+                return redirect('admin_bookings')
         
-        return render(request, 'user/confirm_booking.html', {'booking': booking})
+        return render(request, 'admin/admin_confirm_booking.html', {'booking': booking})
+        
     except Booking.DoesNotExist:
         messages.error(request, "Booking not found.")
-        return redirect('user_bookings')
+        return redirect('admin_bookings')
 # cancle ground view
 @login_required
 def cancel_booking_view(request, booking_id):
@@ -956,7 +982,7 @@ def admin_bookings_view(request):
         return redirect('home')
 
     bookings = Booking.objects.all().order_by('-created_at')
-    return render(request, 'admin/my_bookings.html', {'bookings': bookings})
+    return render(request, 'admin/admin_bookings.html', {'bookings': bookings})  
 
 
 @login_required

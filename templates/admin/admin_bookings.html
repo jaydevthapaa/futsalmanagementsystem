@@ -159,6 +159,18 @@
             font-size: 0.8em;
             font-weight: bold;
             transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-manage {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-manage:hover {
+            background: #138496;
         }
 
         .btn-confirm {
@@ -276,36 +288,18 @@
                             <td>
                                 <div class="action-buttons">
                                     {% if booking.status == 'pending' %}
-                                        <button class="btn btn-confirm"
-                                             data-id="{{ booking.id }}"
-                                             data-status="confirmed"
-                                             onclick="updateBookingStatus(this.dataset.id, this.dataset.status)">
-                                             Confirm
-                                        </button>
-
-                                        <button class="btn btn-cancel"
-                                            data-id="{{ booking.id }}"
-                                            data-status="cancelled"
-                                            onclick="updateBookingStatus(this.dataset.id, this.dataset.status)">
-                                            Cancel
-                                        </button>
-
+                                        <a href="{% url 'admin_confirm_booking' booking.id %}" class="btn btn-manage">
+                                            Manage
+                                        </a>
                                     {% elif booking.status == 'confirmed' %}
                                         <button class="btn btn-complete"
-        data-id="{{ booking.id }}"
-        data-status="completed"
-        onclick="updateBookingStatus(this.dataset.id, this.dataset.status)">
-    Complete
-</button>
-
+                                                onclick="handleBookingAction({{ booking.id }}, 'completed')">
+                                            Complete
+                                        </button>
                                         <button class="btn btn-cancel"
-        data-id="{{ booking.id }}"
-        data-status="cancelled"
-        onclick="updateBookingStatus(this.dataset.id, this.dataset.status)">
-    Cancel
-</button>
-
-
+                                                onclick="handleBookingAction({{ booking.id }}, 'cancelled')">
+                                            Cancel
+                                        </button>
                                     {% else %}
                                         <span class="btn btn-disabled">No Actions</span>
                                     {% endif %}
@@ -316,91 +310,105 @@
                         <tr>
                             <td colspan="8" class="empty-state">
                                 No bookings found.
-                            </td>
+            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+
 <script>
-    // Get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
         }
-        return cookieValue;
     }
+    return cookieValue;
+}
 
-    // Filter bookings by status
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Update active button
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            const status = this.dataset.status;
-            const rows = document.querySelectorAll('#bookings-tbody tr');
-            
-            rows.forEach(row => {
-                if (status === 'all' || row.dataset.status === status) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+// Filter bookings by status
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const status = this.dataset.status;
+        const rows = document.querySelectorAll('#bookings-tbody tr');
+        
+        rows.forEach(row => {
+            if (status === 'all' || row.dataset.status === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
         });
     });
+});
 
-    // Update booking status
-    function updateBookingStatus(bookingId, newStatus) {
-        const confirmation = confirm(`Are you sure you want to ${newStatus} this booking?`);
-        if (!confirmation) return;
-
-        const formData = new FormData();
-        formData.append('status', newStatus);
-
-        fetch(`/admin/bookings/${bookingId}/update-status/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Failed to update booking status");
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                alert(`Booking status updated to "${newStatus}"`);
-
-                // Update row UI
-                const row = document.querySelector(`#booking-row-${bookingId}`);
-                if (row) {
-                    row.dataset.status = newStatus;
-                    const statusCell = row.querySelector('.status-cell');
-                    if (statusCell) {
-                        statusCell.textContent = newStatus;
-                    }
-                }
-            } else {
-                alert(data.message || "Something went wrong");
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            alert("Error updating booking status");
-        });
+// Handle booking actions for confirmed bookings
+function handleBookingAction(bookingId, newStatus) {
+    let message;
+    
+    if (newStatus === 'completed') {
+        message = `Are you sure you want to mark this booking as completed?`;
+    } else if (newStatus === 'cancelled') {
+        message = `Are you sure you want to cancel this booking? The user will be notified about the refund process.`;
     }
+    
+    const confirmation = confirm(message);
+    if (!confirmation) return;
+
+    updateBookingStatus(bookingId, newStatus);
+}
+
+// Update booking status via AJAX
+function updateBookingStatus(bookingId, newStatus) {
+    const formData = new FormData();
+    formData.append('status', newStatus);
+
+    fetch(`/dashboard/bookings/${bookingId}/update-status/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Failed to update booking status");
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            let successMessage;
+            if (newStatus === 'completed') {
+                successMessage = 'Booking marked as completed successfully!';
+            } else if (newStatus === 'cancelled') {
+                successMessage = 'Booking cancelled successfully! User has been notified about the refund.';
+            }
+            
+            alert(successMessage);
+            location.reload();
+        } else {
+            alert(data.error || "Something went wrong");
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        alert("Error updating booking status");
+    });
+}
 </script>
+
+</body>
+</html>
