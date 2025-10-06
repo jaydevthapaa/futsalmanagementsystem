@@ -201,23 +201,30 @@ def admin_dashboard_view(request):
 
 @login_required
 def get_admin_notifications_view(request):
-    print(f"Logged in user: {request.user.username}")
+    
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
 
-    all_notifications = Notification.objects.all().order_by('-created_at')
-    print(f"All notifications: {all_notifications}")
-
-    user_notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
-    print(f"User notifications: {user_notifications}")
-
-    unread_count = user_notifications.filter(status="unread").count()
-    print(f"Unread count: {unread_count}")
-
-    context = {
-        'notifications': user_notifications,
-        'unread_count': unread_count,
-    }
-
-    return render(request, 'admin/notifications.html', context)
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:10]
+    unread_count = Notification.objects.filter(user=request.user, status="unread").count()
+    
+    #  JSON response
+    notifications_data = []
+    for notification in notifications:
+        notifications_data.append({
+            'id': notification.id,
+            'message': notification.message,
+            'status': notification.status,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'booking_id': notification.booking.id if notification.booking else None,
+            'booking_status': notification.booking.status if notification.booking else None,
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'notifications': notifications_data,
+        'unread_count': unread_count
+    })
 
 
 
