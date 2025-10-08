@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Notifications - JustFutsalThings</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+        .notifications-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .notifications-header h1 {
+            font-size: 2rem;
+            color: #333;
+        }
+
+        .mark-all-read-btn {
+            background: #4a90e2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .mark-all-read-btn:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .notification-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .notification-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(5px);
+        }
+
+        .notification-item.unread {
+            border-left-color: #4a90e2;
+            background: #f8fbff;
+        }
+
+        .notification-item.read {
+            border-left-color: #e0e0e0;
+            opacity: 0.8;
+        }
+
+        .notification-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .notification-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .notification-status.unread {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .notification-status.read {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .notification-message {
+            font-size: 1rem;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .notification-time {
+            font-size: 0.85rem;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .notification-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .notification-actions a,
+        .notification-actions button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .view-booking-btn {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .view-booking-btn:hover {
+            background: #357abd;
+        }
+
+        .mark-read-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .mark-read-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-state .ball-icon {
+            font-size: 4rem;
+            opacity: 0.3;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h2 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #999;
+        }
+
+        .booking-status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .booking-status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .booking-status-badge.confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .booking-status-badge.cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .booking-status-badge.completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">JustFutsalThings ⚽</div>
+            <ul class="list-content">
+                <li><a href="{% url 'home' %}" class="link-clean">Home</a></li>
+                <li><a href="{% url 'user_grounds' %}" class="link-clean">Browse Grounds</a></li>
+                <li><a href="{% url 'user_bookings' %}" class="link-clean">My Bookings</a></li>
+                <li class="notification-wrapper">
+                    <a href="{% url 'user_notifications' %}" class="notification-icon" title="Notifications">
+                        <span class="ball-icon">⚽</span>
+                        {% if unread_count > 0 %}
+                            <span class="notification-badge">{{ unread_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li><span class="welcome-user">Welcome, {{ user.username }}!</span></li>
+                <li><a href="{% url 'logout' %}" class="link-clean">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Notifications Container -->
+    <div class="notifications-container">
+        <div class="notifications-header">
+            <h1>📬 My Notifications</h1>
+            {% if unread_count > 0 %}
+                <button class="mark-all-read-btn" onclick="markAllAsRead()">
+                    Mark All as Read ({{ unread_count }})
+                </button>
+            {% endif %}
+        </div>
+
+        {% if notifications %}
+            {% for notification in notifications %}
+                <div class="notification-item {{ notification.status }}" id="notification-{{ notification.id }}">
+                    <div class="notification-header-row">
+                        <span class="notification-status {{ notification.status }}">
+                            {{ notification.status|upper }}
+                        </span>
+                        {% if notification.booking %}
+                            <span class="booking-status-badge {{ notification.booking.status }}">
+                                Booking: {{ notification.booking.status|title }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="notification-message">
+                        {{ notification.message }}
+                    </div>
+                    
+                    <div class="notification-time">
+                        🕒 {{ notification.created_at|date:"M d, Y - h:i A" }}
+                    </div>
+
+                    <div class="notification-actions">
+                        {% if notification.booking %}
+                            <a href="{% url 'user_bookings' %}" class="view-booking-btn">
+                                View Booking
+                            </a>
+                        {% endif %}
+                        {% if notification.status == 'unread' %}
+                            <button class="mark-read-btn" onclick="markAsRead({{ notification.id }})">
+                                Mark as Read
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="ball-icon">⚽</div>
+                <h2>No Notifications Yet</h2>
+                <p>You'll see booking updates and important messages here.</p>
+                <a href="{% url 'user_grounds' %}" class="cta-button" style="display: inline-block; margin-top: 20px;">
+                    Browse Grounds
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function markAsRead(notificationId) {
+            fetch(`/user/notifications/mark-read/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const notificationItem = document.getElementById(`notification-${notificationId}`);
+                    notificationItem.classList.remove('unread');
+                    notificationItem.classList.add('read');
+                    
+                    const statusBadge = notificationItem.querySelector('.notification-status');
+                    statusBadge.textContent = 'READ';
+                    statusBadge.classList.remove('unread');
+                    statusBadge.classList.add('read');
+                    
+                    const markReadBtn = notificationItem.querySelector('.mark-read-btn');
+                    if (markReadBtn) {
+                        markReadBtn.remove();
+                    }
+                    
+                    // Update badge count
+                    updateNotificationBadge();
+                }
+            });
+        }
+
+        function markAllAsRead() {
+            fetch('/user/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.querySelector('.notification-badge');
+            if (badge) {
+                const currentCount = parseInt(badge.textContent);
+                const newCount = currentCount - 1;
+                if (newCount > 0) {
+                    badge.textContent = newCount;
+                } else {
+                    badge.remove();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

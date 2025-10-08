@@ -9,30 +9,35 @@
 </head>
 <body>
     <!-- Navigation barr-->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">JustFutsalThings ⚽</div>
-            <ul class="list-content">
-                <li><a href="{{ 'about' }}" class="link-clean">About</a></li>
-                {% if user.is_authenticated %}
-                    <li><a href="{% url 'user_grounds' %}" class=link-clean">Browse Grounds</a></li>
-                    {% if user.is_staff %}
-                        <li><a href="{{ 'admin_dashboard' }}" class="link-clean">Admin Dashboard</a></li>
-                    {% endif %}
-                    <li><span class="welcome-user">Welcome, {{ user.username }}!</span></li>
-                    <li><a href="{{ 'logout' }}" class="link-clean">Logout</a></li>
-                {% else %}
-                    {% if request.user.is_authenticated %}
-                         <li><a href="{% url 'user_grounds' %}" class="link-clean">Browse Grounds</a></li>
-                        {% else %}
-                          <li><a href="{% url 'signup' %}" class="link-clean">Browse Ground</a></li>
-                        {% endif %}
-                    <li><a href="{{ 'signin' }}" class="link-clean">Login</a></li>
-                    <li><a href="{{ 'signup' }}" class="link-clean">Sign Up</a></li>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo">JustFutsalThings ⚽</div>
+        <ul class="list-content">
+            <li><a href="{% url 'about' %}" class="link-clean">About</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'user_grounds' %}" class="link-clean">Browse Grounds</a></li>
+                <li><a href="{% url 'user_bookings' %}" class="link-clean">My Bookings</a></li>
+                {% if user.is_staff %}
+                    <li><a href="{% url 'admin_dashboard' %}" class="link-clean">Admin Dashboard</a></li>
                 {% endif %}
-            </ul>
-        </div>
-    </nav>
+                <li class="notification-wrapper">
+                    <a href="{% url 'user_notifications' %}" class="notification-icon" title="Notifications">
+                        <span class="ball-icon">⚽</span>
+                        {% if notification_count > 0 %}
+                            <span class="notification-badge">{{ notification_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li><span class="welcome-user">Welcome, {{ user.username }}!</span></li>
+                <li><a href="{% url 'logout' %}" class="link-clean">Logout</a></li>
+            {% else %}
+                <li><a href="{% url 'signup' %}" class="link-clean">Browse Grounds</a></li>
+                <li><a href="{% url 'signin' %}" class="link-clean">Login</a></li>
+                <li><a href="{% url 'signup' %}" class="link-clean">Sign Up</a></li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
 
     <!-- alert Messages-->
     {% if messages %}

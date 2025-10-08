@@ -255,7 +255,48 @@ def get_notification_count_view(request):
     
     return JsonResponse({'count': count})
     
+@login_required
+def user_notifications_view(request):
+    #Display all notifications for regular users
+    # Get all notifications for the logged-in user
+    notifications = Notification.objects.filter(
+        user=request.user
+    ).order_by('-created_at')
+    
+    # Count unread notifications
+    unread_count = notifications.filter(status='unread').count()
+    
+    context = {
+        'notifications': notifications,
+        'unread_count': unread_count,
+    }
+    return render(request, 'user/notifications.html', context)
 
+
+@login_required
+def mark_user_notification_read_view(request, notification_id):
+    """Mark a single notification as read for user"""
+    if request.method == 'POST':
+        try:
+            notification = Notification.objects.get(id=notification_id, user=request.user)
+            notification.status = 'read'
+            notification.save()
+            return JsonResponse({'success': True})
+        except Notification.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Notification not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+def mark_all_notifications_read_view(request):
+    """Mark all notifications as read for the user"""
+    if request.method == 'POST':
+        Notification.objects.filter(
+            user=request.user,
+            status='unread'
+        ).update(status='read')
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
 def grounds_edit_view(request, pk):
@@ -861,7 +902,7 @@ def mark_notification_read_view(request, notification_id):
 
 @login_required
 def admin_confirm_booking(request, booking_id):
-    """Admin view to confirm a booking - similar to user confirm but for admin"""
+    """Admin view to confirm a booking"""
     if not request.user.is_staff:
         messages.error(request, "You do not have permission to access this page.")
         return redirect('home')
@@ -869,7 +910,6 @@ def admin_confirm_booking(request, booking_id):
     try:
         booking = Booking.objects.get(id=booking_id)
         
-        # Only allow confirmation if booking is pending
         if booking.status != 'pending':
             messages.error(request, "This booking cannot be confirmed.")
             return redirect('admin_bookings')
@@ -885,14 +925,7 @@ def admin_confirm_booking(request, booking_id):
                 Notification.objects.create(
                     user=booking.user,
                     booking=booking,
-                    message=f"Your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')} has been confirmed by admin."
-                )
-                
-                # Create notification for admin
-                Notification.objects.create(
-                    user=request.user,
-                    booking=booking,
-                    message=f"You confirmed booking by {booking.user.username} for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')}."
+                    message=f"✅ Great news! Your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')} has been confirmed!"
                 )
                 
                 messages.success(request, "Booking confirmed successfully.")
@@ -902,18 +935,11 @@ def admin_confirm_booking(request, booking_id):
                 booking.status = 'cancelled'
                 booking.save()
                 
-                # Create notification for user about cancellation and refund
+                # Create notification for user about cancellation
                 Notification.objects.create(
                     user=booking.user,
                     booking=booking,
-                    message=f"Your booking for {booking.ground.groundName} on {booking.booking_date} has been cancelled by admin. Your advance payment will be refunded within 3-5 business days."
-                )
-                
-                # Create notification for admin
-                Notification.objects.create(
-                    user=request.user,
-                    booking=booking,
-                    message=f"You cancelled booking by {booking.user.username} for {booking.ground.groundName}. Refund process initiated."
+                    message=f"❌ Your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')} has been cancelled. Your advance payment will be refunded within 3-5 business days."
                 )
                 
                 messages.success(request, "Booking cancelled successfully. User has been notified about the refund.")
@@ -994,7 +1020,6 @@ def admin_bookings_view(request):
 
 @login_required
 def update_booking_status_view(request, booking_id):
- 
     if not request.user.is_staff:
         return JsonResponse({'success': False, 'error': 'Permission denied'})
 
@@ -1010,13 +1035,14 @@ def update_booking_status_view(request, booking_id):
             booking.status = new_status
             booking.save()
 
-          
+            # Enhanced notification messages 
             status_messages = {
-                'confirmed': f"Your booking for {booking.ground.groundName} on {booking.booking_date} has been confirmed.",
-                'cancelled': f"Your booking for {booking.ground.groundName} on {booking.booking_date} has been cancelled.",
-                'completed': f"Your booking for {booking.ground.groundName} on {booking.booking_date} has been completed."
+                'confirmed': f"✅ Great news! Your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')} has been confirmed!",
+                'cancelled': f"❌ Your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')} has been cancelled. Refund will be processed within 3-5 business days.",
+                'completed': f"✓ Your booking for {booking.ground.groundName} on {booking.booking_date} at {booking.start_time.strftime('%I:%M %p')} has been completed. Thank you for using our service!"
             }
 
+            # Create notification for user
             Notification.objects.create(
                 user=booking.user,
                 booking=booking,

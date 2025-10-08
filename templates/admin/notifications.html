@@ -125,14 +125,16 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update UI
+                    
                     const notifElement = document.querySelector(`[data-id="${notificationId}"]`);
                     notifElement.classList.remove('unread');
                     notifElement.classList.add('read');
                     btn.remove();
                     
-                    // Update badge count
-                    updateUnreadCount();
+                   
+                    setTimeout(() => {
+                        updateUnreadCount();
+                    }, 0);
                 } else {
                     alert('Failed to mark notification as read');
                     btn.disabled = false;
@@ -148,17 +150,17 @@
         }
 
         function updateUnreadCount() {
-            fetch('/notifications/count/')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('unread-badge').textContent = `(${data.count} unread)`;
-                })
-                .catch(error => console.error('Error updating count:', error));
+            // Count unread notifications directly from the DOM
+            const unreadCount = document.querySelectorAll('.notification.unread').length;
+            const badge = document.getElementById('unread-badge');
+            if (badge) {
+                badge.textContent = `(${unreadCount} unread)`;
+            }
         }
 
         function getCookie(name) {
             let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {x
+            if (document.cookie && document.cookie !== '') {
                 const cookies = document.cookie.split(';');
                 for (let i = 0; i < cookies.length; i++) {
                     const cookie = cookies[i].trim();
@@ -170,12 +172,173 @@
             }
             return cookieValue;
         }
-             document.querySelectorAll('.mark-read-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const notificationId = btn.dataset.id;
-                        markAsRead(notificationId);
-                    });
-                });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Notifications</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .notification {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notification:last-child {
+            border-bottom: none;
+        }
+        .notification.unread {
+            background: #eef6ff;
+            font-weight: bold;
+        }
+        .notification.read {
+            opacity: 0.7;
+        }
+        .message {
+            flex: 1;
+        }
+        .time {
+            color: #888;
+            font-size: 0.9em;
+            margin-left: 15px;
+        }
+        .mark-read-btn {
+            padding: 5px 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        .mark-read-btn:hover {
+            background: #45a049;
+        }
+        .mark-read-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .empty {
+            text-align: center;
+            color: #777;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Notifications <span id="unread-badge">({{ unread_count }} unread)</span></h1>
+
+        <div id="notification-list">
+            {% if notifications %}
+                {% for notification in notifications %}
+                    <div class="notification {% if notification.status == 'unread' %}unread{% else %}read{% endif %}" data-id="{{ notification.id }}">
+                        <div class="message">{{ notification.message }}</div>
+                        <div class="time">{{ notification.created_at|date:"M d, Y H:i" }}</div>
+                        {% if notification.status == 'unread' %}
+                            <button class="mark-read-btn" onclick="markAsRead('{{ notification.id }}', event)">
+                                Mark as Read
+                            </button>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty">No notifications found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function markAsRead(notificationId, event) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Marking...';
+
+            fetch(`/admin/notifications/${notificationId}/mark-read/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update UI
+                    const notifElement = document.querySelector(`[data-id="${notificationId}"]`);
+                    if (notifElement) {
+                        notifElement.classList.remove('unread');
+                        notifElement.classList.add('read');
+                        btn.remove();
+                        
+                        // Update badge count immediately
+                        updateUnreadCount();
+                    }
+                } else {
+                    alert('Failed to mark notification as read: ' + (data.error || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.textContent = 'Mark as Read';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = 'Mark as Read';
+            });
+        }
+
+        function updateUnreadCount() {
+            // Count unread notifications directly from the DOM
+            const unreadCount = document.querySelectorAll('.notification.unread').length;
+            const badge = document.getElementById('unread-badge');
+            if (badge) {
+                badge.textContent = `(${unreadCount} unread)`;
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
     </script>
 </body>
 </html>

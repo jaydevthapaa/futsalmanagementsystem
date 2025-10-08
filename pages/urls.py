@@ -37,7 +37,9 @@ from .views import (
     get_admin_notifications_view,
     mark_admin_notification_read_view,
     get_notification_count_view,
-    
+    user_notifications_view,
+    mark_user_notification_read_view,
+    mark_all_notifications_read_view,
     # admin bookings
     admin_bookings_view,
     admin_booking_detail_view,
@@ -91,4 +93,7 @@ urlpatterns = [
     path('api/notification-count/', get_notification_count_view, name='get_notification_count'),
     path('notifications/', get_notifications_view, name='get_notifications'),
     path('notifications/<int:notification_id>/read/', mark_notification_read_view, name='mark_notification_read'),
+    path('user/notifications/', user_notifications_view, name='user_notifications'),
+    path('user/notifications/mark-read/<int:notification_id>/', mark_user_notification_read_view, name='mark_user_notification_read'),
+    path('user/notifications/mark-all-read/', mark_all_notifications_read_view, name='mark_all_notifications_read'),
 ]
