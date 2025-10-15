@@ -44,6 +44,9 @@ from .views import (
     admin_bookings_view,
     admin_booking_detail_view,
     update_booking_status_view,
+    # otp verification
+    verify_otp_view,
+    resend_otp_view,
 )
 
 urlpatterns = [
@@ -96,4 +99,7 @@ urlpatterns = [
     path('user/notifications/', user_notifications_view, name='user_notifications'),
     path('user/notifications/mark-read/<int:notification_id>/', mark_user_notification_read_view, name='mark_user_notification_read'),
     path('user/notifications/mark-all-read/', mark_all_notifications_read_view, name='mark_all_notifications_read'),
+    # otp verification
+    path('verify-otp/', verify_otp_view, name='verify_otp'),
+    path('resend_otp/',resend_otp_view, name='resend_otp'),
 ]

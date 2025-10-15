@@ -142,3 +142,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_HOST_USER = '708009ca4928c0'
+EMAIL_HOST_PASSWORD = '5f882e6f9f21fc'
+EMAIL_PORT = 2525
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@justfutsalthings.com'

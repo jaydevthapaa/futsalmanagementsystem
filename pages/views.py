@@ -12,11 +12,16 @@ from .models import UserProfile, FutsalGround, Booking, Notification
 from django.urls import reverse
 # esewaa intergration
 import hmac, hashlib, base64,uuid
-
 #khaltii
-
 import requests
 import json
+# otp 
+import random
+from django.core.mail import send_mail
+from .models import EmailOTP
+from django.utils import timezone
+from django.conf import settings
+
 
 # Create your views here.
 def home_page_view(request):
@@ -79,27 +84,174 @@ def signin_view(request):
     return render(request, 'signin.html')
 
 # signup view
+
 def signup_view(request):
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            first_name = form.cleaned_data.get('first_name', '').strip()
+            last_name = form.cleaned_data.get('last_name', '').strip()
             username = form.cleaned_data.get('username')
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password1')
+            phone_number = form.cleaned_data.get('phone_number', '').strip()
             address = form.cleaned_data.get('address', '').strip()
-            if address:
-                UserProfile.objects.update_or_create(
-                    user=user,
-                    defaults={"address": address}
-                )
-            messages.success(request, f'Account created successfully for {username}! You can log in now')
-            return redirect('signin')
+            
+            # Prevent duplicate accounts (additional check)
+            if User.objects.filter(username=username).exists():
+                messages.error(request, "Username already taken.")
+                return redirect('signup')
+            
+            if User.objects.filter(email=email).exists():
+                messages.error(request, "Email already registered.")
+                return redirect('signup')
+            
+            # Check for recent OTP requests (rate limiting)
+            recent_otp = EmailOTP.objects.filter(
+                email=email,
+                created_at__gte=timezone.now() - timedelta(minutes=1)
+            ).first()
+            
+            if recent_otp:
+                messages.warning(request, "Please wait before requesting a new OTP.")
+                return redirect('signup')
+            
+            # Generate OTP
+            otp = str(random.randint(100000, 999999))
+            EmailOTP.objects.filter(email=email).delete()  
+            EmailOTP.objects.create(email=email, otp=otp)
+            
+            # Send OTP via email
+            try:
+                subject = "Your OTP Verification Code"
+                message = f"Your OTP is {otp}. It will expire in 1 minute."
+                from django.conf import settings
+                from_email = settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else None
+                send_mail(subject, message, from_email, [email], fail_silently=False)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()  
+                messages.error(request, f"Failed to send OTP: {str(e)}")
+                EmailOTP.objects.filter(email=email).delete()
+                return redirect('signup')
+                    
+            
+            # Store user data in session temporarily
+            request.session['temp_user'] = {
+                'first_name': first_name,
+                'last_name': last_name,
+                'username': username,
+                'email': email,
+                'password': password,
+                'phone_number': phone_number,
+                'address': address
+            }
+            
+            messages.success(request, f"OTP sent to {email}. Please verify.")
+            return redirect('verify_otp')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
         form = SignupForm()
-
     return render(request, 'signup.html', {'form': form})
 
+
+def verify_otp_view(request):
+    # Verify OTP and create user account
+    if request.method == 'POST':
+        otp_entered = request.POST.get('otp', '').strip()
+        temp_user = request.session.get('temp_user')
+        
+        if not temp_user:
+            messages.error(request, "Session expired. Please sign up again.")
+            return redirect('signup')
+        
+        email = temp_user.get('email')
+        
+        # Check OTP validity
+        try:
+            otp_obj = EmailOTP.objects.get(email=email, otp=otp_entered)
+            
+            # Check if OTP is expired (1 minute)
+            if timezone.now() > otp_obj.created_at + timedelta(minutes=1):
+                otp_obj.delete()
+                messages.error(request, "OTP expired. Please sign up again.")
+                del request.session['temp_user']
+                return redirect('signup')
+            
+            # OTP is valid, create user
+            user = User.objects.create_user(
+                username=temp_user['username'],
+                email=temp_user['email'],
+                password=temp_user['password'],
+                first_name=temp_user.get('first_name', ''),
+                last_name=temp_user.get('last_name', '')
+            )
+            
+            # Create user profile with phone and address
+            phone_number = temp_user.get('phone_number', '').strip()
+            address = temp_user.get('address', '').strip()
+            
+            if phone_number or address:
+                UserProfile.objects.update_or_create(
+                    user=user,
+                    defaults={
+                        "phone_number": phone_number,
+                        "address": address
+                    }
+                )
+            
+            # Clean up
+            otp_obj.delete()
+            del request.session['temp_user']
+            
+            messages.success(request, f'Account created successfully for {user.username}! You can log in now.')
+            return redirect('signin')
+            
+        except EmailOTP.DoesNotExist:
+            messages.error(request, "Invalid OTP. Please try again.")
+            return redirect('verify_otp')
+    
+    return render(request, 'verify_otp.html')
+
+
+def resend_otp_view(request):
+    # Resend OTP to user's email
+    temp_user = request.session.get('temp_user')
+    
+    if not temp_user:
+        messages.error(request, "Session expired. Please sign up again.")
+        return redirect('signup')
+    
+    email = temp_user.get('email')
+    
+    # Check rate limiting
+    recent_otp = EmailOTP.objects.filter(
+        email=email,
+        created_at__gte=timezone.now() - timedelta(minutes=1)
+    ).first()
+    
+    if recent_otp:
+        messages.warning(request, "Please wait before requesting a new OTP.")
+        return redirect('verify_otp')
+    
+    # Generate new OTP
+    otp = str(random.randint(100000, 999999))
+    EmailOTP.objects.filter(email=email).delete()
+    EmailOTP.objects.create(email=email, otp=otp)
+    
+    # Send OTP
+    try:
+        subject = "Your OTP Verification Code"
+        message = f"Your OTP is {otp}. It will expire in 1 minute."
+        from django.conf import settings
+        from_email = settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else None
+        send_mail(subject, message, from_email, [email], fail_silently=False)
+        messages.success(request, f"New OTP sent to {email}.")
+    except Exception as e:
+        messages.error(request, f"Failed to send OTP: {str(e)}")
+    
+    return redirect('verify_otp')
 
 def logout_view(request):
     logout(request)
@@ -275,7 +427,7 @@ def user_notifications_view(request):
 
 @login_required
 def mark_user_notification_read_view(request, notification_id):
-    """Mark a single notification as read for user"""
+    # Mark a single notification as read for user
     if request.method == 'POST':
         try:
             notification = Notification.objects.get(id=notification_id, user=request.user)
@@ -289,7 +441,7 @@ def mark_user_notification_read_view(request, notification_id):
 
 @login_required
 def mark_all_notifications_read_view(request):
-    """Mark all notifications as read for the user"""
+    # Mark all notifications as read for the user
     if request.method == 'POST':
         Notification.objects.filter(
             user=request.user,
@@ -494,12 +646,6 @@ def book_ground_view(request, ground_id):
         failure_url = f"{protocol}://{host}/esewa/failure/"
        
         print(f"Manual URLs - Success: {success_url}, Failure: {failure_url}")
-        #  Print the URLs being generated
-        print(f"DEBUG - Success URL: {success_url}")
-        print(f"DEBUG - Failure URL: {failure_url}")
-        print(f"DEBUG - Request is_secure: {request.is_secure()}")
-        print(f"DEBUG - Request get_host: {request.get_host()}")
-
         params = {
             "total_amount": str(advance_amount),
             "transaction_uuid": transaction_id,

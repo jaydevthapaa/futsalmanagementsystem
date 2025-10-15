@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - JustFutsalThings ⚽</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+        .otp-container {
+            max-width: 450px;
+            margin: 50px auto;
+        }
+        
+        .otp-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .otp-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+        }
+        
+        .timer {
+            text-align: center;
+            color: #666;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .timer.expired {
+            color: #dc3545;
+        }
+        
+        .resend-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .resend-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .resend-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .otp-info {
+            background-color: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="otp-container">
+            <div class="booking-header">
+                <h1>🔐 Verify OTP</h1>
+                <p>Enter the 6-digit code sent to your email</p>
+            </div>
+            
+            <!-- Display Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="otp-info">
+                📧 We've sent a verification code to your email. Please check your inbox and enter the code below.
+            </div>
+            
+            <div class="auth-form">
+                <form method="post" id="otpForm">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="otp">Enter 6-Digit OTP</label>
+                        <input 
+                            type="text" 
+                            id="otp" 
+                            name="otp" 
+                            class="otp-input" 
+                            placeholder="000000" 
+                            maxlength="6" 
+                            pattern="\d{6}"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    
+                    <div class="timer" id="timer">
+                        ⏱️ OTP expires in: <span id="countdown">01:00</span>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="verifyBtn">Verify OTP</button>
+                </form>
+                
+                <div class="resend-link">
+                    <p>Didn't receive the code?</p>
+                    <a href="{% url 'resend_otp' %}" id="resendLink">Resend OTP</a>
+                </div>
+                
+                <div class="booking-actions" style="margin-top: 20px;">
+                    <a href="{% url 'signup' %}" class="btn btn-secondary">Back to Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // OTP Input - Only allow numbers
+        const otpInput = document.getElementById('otp');
+        otpInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+        
+        // Countdown Timer (1 minute)
+        let timeLeft = 60;
+        const countdownElement = document.getElementById('countdown');
+        const timerElement = document.getElementById('timer');
+        const verifyBtn = document.getElementById('verifyBtn');
+        
+        const countdown = setInterval(function() {
+            timeLeft--;
+            
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                timerElement.classList.add('expired');
+                timerElement.innerHTML = '⚠️ OTP has expired';
+                verifyBtn.disabled = true;
+                verifyBtn.textContent = 'OTP Expired';
+                verifyBtn.style.backgroundColor = '#ccc';
+            } else if (timeLeft <= 10) {
+                timerElement.style.color = '#dc3545';
+            }
+        }, 1000);
+        
+        // Auto-submit when 6 digits entered (optional)
+        otpInput.addEventListener('input', function() {
+            if (this.value.length === 6) {
+                //  auto-submit
+                // document.getElementById('otpForm').submit();
+            }
+        });
+    </script>
+    <script src="{% static 'auto_hide_alerts.js' %}"></script>
+</body>
+</html>

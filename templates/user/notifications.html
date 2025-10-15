@@ -310,7 +310,7 @@
         function markAllAsRead() {
             fetch('/user/notifications/mark-all-read/', {
                 method: 'POST',
-                headers: {
+                headers: { 
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 }
