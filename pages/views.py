@@ -353,38 +353,44 @@ def admin_dashboard_view(request):
 
 @login_required
 def get_admin_notifications_view(request):
-    
     if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'Permission denied'})
-
-    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:10]
-    unread_count = Notification.objects.filter(user=request.user, status="unread").count()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+        return redirect('home')
     
-    #  JSON response
-    notifications_data = []
-    for notification in notifications:
-        notifications_data.append({
-            'id': notification.id,
-            'message': notification.message,
-            'status': notification.status,
-            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'booking_id': notification.booking.id if notification.booking else None,
-            'booking_status': notification.booking.status if notification.booking else None,
+    notifications = Notification.objects.filter(user=request.user).select_related('booking').order_by('-created_at')
+    unread_count = notifications.filter(status='unread').count()
+    
+    # If AJAX request, return JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        notifications_data = []
+        for notification in notifications:
+            notifications_data.append({
+                'id': notification.id,
+                'message': notification.message,
+                'status': notification.status,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'booking_id': notification.booking.id if notification.booking else None,
+                'booking_status': notification.booking.status if notification.booking else None,
+            })
+        return JsonResponse({
+            'success': True,
+            'notifications': notifications_data,
+            'unread_count': unread_count
         })
     
-    return JsonResponse({
-        'success': True,
-        'notifications': notifications_data,
+    # Otherwise return HTML template (direct page visit)
+    return render(request, 'admin/notifications.html', {
+        'notifications': notifications,
         'unread_count': unread_count
     })
-
 
 
 @login_required
 def mark_admin_notification_read_view(request, notification_id):
     
     if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'Permission denied'})
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
     
     if request.method == 'POST':
         try:
@@ -393,9 +399,8 @@ def mark_admin_notification_read_view(request, notification_id):
             notification.save()
             return JsonResponse({'success': True})
         except Notification.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Notification not found'})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
+            return JsonResponse({'success': False, 'error': 'Notification not found'}, status=404)
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
 @login_required
 def get_notification_count_view(request):
